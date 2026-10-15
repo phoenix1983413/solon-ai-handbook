@@ -137,29 +137,29 @@ for i, (chapter_num, chapter_info) in enumerate(sorted_chapters):
             <div class="nav-section">
                 <h3>第一阶段</h3>
                 <ul>
-                    <li><a href="01.html" {active_states['active1']}>第1章 框架概览</a></li>
-                    <li><a href="02.html" {active_states['active2']}>第2章 ChatModel</a></li>
-                    <li><a href="03.html" {active_states['active3']}>第3章 提示词工程</a></li>
-                    <li><a href="04.html" {active_states['active4']}>第4章 工具基础</a></li>
+                    <li><a href="01.html" {active_states['active1']}>第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" {active_states['active2']}>第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" {active_states['active3']}>第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" {active_states['active4']}>第4章 工具（Tool）基础</a></li>
                 </ul>
             </div>
             <div class="nav-section">
                 <h3>第二阶段</h3>
                 <ul>
-                    <li><a href="05.html" {active_states['active5']}>第5章 RAG</a></li>
-                    <li><a href="06.html" {active_states['active6']}>第6章 Agent</a></li>
-                    <li><a href="07.html" {active_states['active7']}>第7章 MCP</a></li>
-                    <li><a href="08.html" {active_states['active8']}>第8章 Flow</a></li>
-                    <li><a href="09.html" {active_states['active9']}>第9章 Talents</a></li>
+                    <li><a href="05.html" {active_states['active5']}>第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" {active_states['active6']}>第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" {active_states['active7']}>第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" {active_states['active8']}>第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" {active_states['active9']}>第9章 Talents 能力插件体系</a></li>
                 </ul>
             </div>
             <div class="nav-section">
                 <h3>第三阶段</h3>
                 <ul>
-                    <li><a href="10.html" {active_states['active10']}>第10章 多Agent</a></li>
-                    <li><a href="11.html" {active_states['active11']}>第11章 企业RAG</a></li>
-                    <li><a href="12.html" {active_states['active12']}>第12章 MCP网关</a></li>
-                    <li><a href="13.html" {active_states['active13']}>第13章 综合实战</a></li>
+                    <li><a href="10.html" {active_states['active10']}>第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" {active_states['active11']}>第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" {active_states['active12']}>第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" {active_states['active13']}>第13章 综合项目实战：智能客服平台</a></li>
                 </ul>
             </div>
         </nav>
