@@ -93,7 +93,7 @@
     </aside>
     <main class="main-content">
         <div class="content-wrapper">
-            <h3 id="131">13.1 项目需求</h3>
+            <h3 id="131">13.1 理论讲解</h3>
 <p>构建一个完整的智能客服平台，整合前面所有知识点：</p>
 <p><strong>功能模块</strong>：
 1. <strong>用户管理</strong>：用户注册、登录、会话管理
@@ -101,7 +101,7 @@
 3. <strong>智能问答</strong>：RAG + Agent 混合问答
 4. <strong>工单系统</strong>：自动创建、分配、流转
 5. <strong>数据分析</strong>：问答质量评估、热点问题统计</p>
-<h3 id="132">13.2 技术架构</h3>
+<p><strong>技术架构</strong>：</p>
 <pre class="codehilite"><code>┌─────────────────────────────────────────┐
 │             前端层 (Vue/React)           │
 └─────────────────────────────────────────┘
@@ -131,7 +131,7 @@
 └─────────────────────────────────────────┘
 </code></pre>
 
-<h3 id="133">13.3 核心代码示例</h3>
+<h3 id="132">13.2 实践练习</h3>
 <h4 id="1rag">模块1：RAG 检索服务</h4>
 <pre class="codehilite"><code class="language-java">@Controller
 public class KnowledgeController {
@@ -212,7 +212,8 @@ layout:
   - task: &quot;@ConsoleOutput&quot;
 </code></pre>
 
-<h3 id="134">13.4 部署方案</h3>
+<h3 id="133">13.3 项目实战</h3>
+<h4 id="docker-compose">Docker Compose 部署方案</h4>
 <pre class="codehilite"><code class="language-yaml"># docker-compose.yml
 version: '3.8'
 services:
@@ -240,6 +241,15 @@ services:
     command: serve
 </code></pre>
 
+<h4 id="_1">项目部署检查清单</h4>
+<ol>
+<li><strong>环境准备</strong>：Docker 20.10+、Docker Compose 2.0+、8GB+ 内存</li>
+<li><strong>模型准备</strong>：下载 <code>qwen2.5:1.5b</code> 和 <code>bge-m3</code> 到 Ollama</li>
+<li><strong>数据库初始化</strong>：创建 <code>cs_db</code> 数据库，启用 <code>vector</code> 扩展</li>
+<li><strong>配置文件</strong>：修改 <code>application.yml</code> 中的数据库连接和模型地址</li>
+<li><strong>启动服务</strong>：<code>docker-compose up -d</code>，观察日志确认所有服务健康</li>
+<li><strong>验证功能</strong>：访问 <code>http://localhost:8080</code>，测试问答和工单创建流程</li>
+</ol>
 <hr />
 <h2 id="13">第13章 注意事项</h2>
 <ol>
@@ -268,7 +278,7 @@ services:
 - 接入日志收集（stdout → Loki 或 ELK），实现全链路追踪
 - 编写 <code>README.md</code>，记录启动步骤、端口映射、默认账号密码</p>
 <hr />
-<h2 id="_1">📖 附录</h2>
+<h2 id="_2">📖 附录</h2>
 <h3 id="a-faq">附录A：常见问题 FAQ</h3>
 <p><strong>Q1: Solon-AI 和 LangChain4j 有什么区别？</strong></p>
 <table>
@@ -372,7 +382,7 @@ Week 6: 第11-13章（企业级 RAG + MCP 网关 + 综合项目）
 </code></pre>
 
 <hr />
-<h2 id="_2">总结</h2>
+<h2 id="_3">总结</h2>
 <p>通过本指南，你将掌握：</p>
 <ol>
 <li><strong>基础能力</strong>：ChatModel 调用、Prompt 工程、Tool 开发</li>
