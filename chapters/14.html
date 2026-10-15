@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第14章 企业知识库与智能文档处理平台 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" >第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" >第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" >第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" >第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" >第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" >第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" >第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" >第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" >第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" >第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="141">14.1 理论讲解</h3>
+<h4 id="1411">14.1.1 企业知识管理痛点与解决方案</h4>
+<p><strong>典型痛点</strong>：
+1. <strong>文档散落</strong>：PDF/Word/Excel/PPT 分散在各部门共享盘、邮件、聊天记录中
+2. <strong>查找困难</strong>：员工平均每周花费 5+ 小时查找政策、流程、历史案例
+3. <strong>知识老化</strong>：文档更新后旧版本仍在流传，缺乏版本控制
+4. <strong>新人上手慢</strong>：培训材料零散，新人需要 3-6 个月才能独立工作
+5. <strong>专家瓶颈</strong>：资深员工的知识无法有效沉淀和传承</p>
+<p><strong>Solon-AI 解决方案</strong>：
+- <strong>摄取层</strong>：<code>solon-ai-rag-loaders</code> 支持 7 种格式自动解析
+- <strong>检索引擎</strong>：<code>solon-ai-rag-repositorys</code> + Elasticsearch 混合检索
+- <strong>权限层</strong>：<code>solon-ai-harness</code> + Talents 实现 RBAC/ABAC
+- <strong>审计层</strong>：Talents 中的 <code>audit</code> + <code>mail</code> 实现操作日志和通知</p>
+<h4 id="1412">14.1.2 系统架构设计</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│         前端层 (Vue/React + AGUI)        │
+└─────────────────────────────────────────┘
+                    ↓ HTTP/WebSocket
+┌─────────────────────────────────────────┐
+│      Solon-AI 应用层                     │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Document │  │   RAG    │             │
+│  │ Ingestion│  │  Engine  │             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Permission│ │  Audit   │             │
+│  │  (RBAC)   │ │  Log     │             │
+│  └──────────┘  └──────────┘             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           数据层                         │
+│  PostgreSQL + pgvector │ Redis │ ES     │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="1413">14.1.3 核心组件详解</h4>
+<p><strong>1. 文档摄取管道（Ingestion Pipeline）</strong></p>
+<pre class="codehilite"><code>原始文件 → 格式检测 → 解析器选择 → 文本提取 → 元数据提取 → 切分策略 → 向量化 → 存储
+</code></pre>
+
+<p>关键设计：
+- <strong>格式检测</strong>：基于文件魔数（magic number）而非扩展名
+- <strong>切分策略</strong>：
+  - 标题级别切分（H1/H2/H3）
+  - 段落切分（500 tokens，50 overlap）
+  - 表格保留（不切分表格内容）
+  - 代码块保留（保留语法高亮信息）
+- <strong>向量化</strong>：批量处理，单次最多 100 个 chunk</p>
+<p><strong>2. 混合检索引擎（Hybrid Search）</strong></p>
+<pre class="codehilite"><code>用户查询 → 向量化 → 并行检索 → RRF融合 → 重排序 → 返回结果
+</code></pre>
+
+<ul>
+<li><strong>向量检索</strong>：pgvector，余弦相似度，Top 20</li>
+<li><strong>关键词检索</strong>：Elasticsearch BM25，Top 20</li>
+<li><strong>RRF 融合</strong>：k=60，合并后取 Top 10</li>
+<li><strong>重排序</strong>：Cross-Encoder 模型精排</li>
+</ul>
+<p><strong>3. 多租户权限模型</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>示例</th>
+<th>实现方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>部门</td>
+<td>研发部/市场部/财务部</td>
+<td>文档 metadata.department</td>
+</tr>
+<tr>
+<td>角色</td>
+<td>员工/经理/高管</td>
+<td>用户角色标签</td>
+</tr>
+<tr>
+<td>密级</td>
+<td>公开/内部/机密/绝密</td>
+<td>文档 classification + 用户 clearance</td>
+</tr>
+</tbody>
+</table>
+<p><strong>4. 引用溯源机制</strong></p>
+<ul>
+<li>返回答案时附带参考段落原文</li>
+<li>高亮显示参考位置（页码/章节）</li>
+<li>支持"跳转到原文"功能</li>
+</ul>
+<h4 id="1414">14.1.4 关键技术决策</h4>
+<p><strong>Q1：为什么选 pgvector 而非 Elasticsearch 做为主向量库？</strong></p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>pgvector</th>
+<th>Elasticsearch</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>部署成本</td>
+<td>低（复用现有 PostgreSQL）</td>
+<td>高（需独立部署 ES 集群）</td>
+</tr>
+<tr>
+<td>查询性能</td>
+<td>10万级向量毫秒级</td>
+<td>百万级向量毫秒级</td>
+</tr>
+<tr>
+<td>事务支持</td>
+<td>强（ACID）</td>
+<td>弱（最终一致）</td>
+</tr>
+<tr>
+<td>生态融合</td>
+<td>好（Solon 数据访问层）</td>
+<td>一般</td>
+</tr>
+<tr>
+<td>适用规模</td>
+<td>10万-100万向量</td>
+<td>100万+ 向量</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：中小规模（&lt;100万向量）pgvector 性价比最高；大规模考虑 ES 或 Milvus。</p>
+<p><strong>Q2：文档切分策略如何选择？</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>固定长度</td>
+<td>通用</td>
+<td>实现简单</td>
+<td>可能切断语义</td>
+</tr>
+<tr>
+<td>标题级别</td>
+<td>结构化文档</td>
+<td>保留语义</td>
+<td>chunk 大小不均</td>
+</tr>
+<tr>
+<td>语义切分</td>
+<td>高质量需求</td>
+<td>语义完整</td>
+<td>计算成本高</td>
+</tr>
+<tr>
+<td>表格保留</td>
+<td>含表格文档</td>
+<td>表格不破碎</td>
+<td>实现复杂</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：标题级别为主，段落切分为辅，表格和代码块强制保留。</p>
+<p><strong>Q3：向量化模型选型</strong></p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>维度</th>
+<th>大小</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bge-m3</td>
+<td>1024</td>
+<td>2GB</td>
+<td>多语言、通用（推荐）</td>
+</tr>
+<tr>
+<td>nomic-embed-text</td>
+<td>768</td>
+<td>500MB</td>
+<td>英文为主</td>
+</tr>
+<tr>
+<td>text-embedding-3-small</td>
+<td>1536</td>
+<td>-</td>
+<td>OpenAI 生态</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：bge-m3（多语言支持好，本地部署，符合国内合规）。</p>
+<h3 id="142">14.2 实践练习</h3>
+<h4 id="1">练习1：文档上传与解析服务</h4>
+<p><strong>目标</strong>：实现支持 PDF/Word/Excel/PPT 四种格式的上传接口</p>
+<pre class="codehilite"><code class="language-java">@Configuration
+public class DocumentConfig {
+
+    @Bean
+    public List&lt;DocumentLoader&gt; documentLoaders(
+            PdfLoader pdfLoader,
+            WordLoader wordLoader,
+            ExcelLoader excelLoader,
+            PptLoader pptLoader) {
+        return List.of(pdfLoader, wordLoader, excelLoader, pptLoader);
+    }
+}
+
+@Singleton
+public class DocumentIngestionService {
+    private final List&lt;DocumentLoader&gt; loaders;
+    private final EmbeddingModel embeddingModel;
+    private final VectorRepository repository;
+
+    @Inject
+    public DocumentIngestionService(List&lt;DocumentLoader&gt; loaders,
+                                    EmbeddingModel embeddingModel,
+                                    VectorRepository repository) {
+        this.loaders = loaders;
+        this.embeddingModel = embeddingModel;
+        this.repository = repository;
+    }
+
+    public IngestionResult ingest(MultipartFile file) throws Exception {
+        // 1. 格式检测
+        String mimeType = detectMimeType(file.getInputStream());
+
+        // 2. 选择解析器
+        DocumentLoader loader = loaders.stream()
+                .filter(l -&gt; l.supports(mimeType))
+                .findFirst()
+                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Unsupported format: &quot; + mimeType));
+
+        // 3. 解析文档
+        Document document = loader.load(file.getInputStream());
+
+        // 4. 切分
+        List&lt;TextSplit&gt; splits = splitDocument(document);
+
+        // 5. 向量化（批量）
+        List&lt;Embedding&gt; embeddings = embeddingModel.embed(
+            splits.stream().map(TextSplit::getText).toList()
+        );
+
+        // 6. 存储
+        for (int i = 0; i &lt; splits.size(); i++) {
+            repository.save(new DocumentChunk(splits.get(i), embeddings.get(i)));
+        }
+
+        return IngestionResult.success(splits.size());
+    }
+
+    private String detectMimeType(InputStream is) throws IOException {
+        byte[] header = is.readNBytes(16);
+        is.close();
+        return TikaFactory.detect(header);
+    }
+}
+</code></pre>
+
+<p><strong>关键工程细节</strong>：
+- 使用 Apache Tika 做格式检测（基于文件魔数）
+- 批量向量化减少 LLM 调用次数
+- 异常处理：格式不支持、文件过大、解析失败</p>
+<h4 id="2">练习2：混合检索引擎</h4>
+<p><strong>目标</strong>：实现向量检索 + 关键词检索 + RRF 融合</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class HybridSearchEngine {
+    private final VectorRepository vectorRepo;
+    private final ElasticsearchClient esClient;
+    private final EmbeddingModel embeddingModel;
+    private final RerankingModel rerankingModel; // 可选
+
+    @Inject
+    public HybridSearchEngine(VectorRepository vectorRepo,
+                             ElasticsearchClient esClient,
+                             EmbeddingModel embeddingModel) {
+        this.vectorRepo = vectorRepo;
+        this.esClient = esClient;
+        this.embeddingModel = embeddingModel;
+    }
+
+    public List&lt;ScoredDocument&gt; search(String query, SearchOptions options) {
+        // 1. 向量检索（语义相似度）
+        Embedding queryEmbedding = embeddingModel.embed(query);
+        List&lt;ScoredDocument&gt; vectorResults = vectorRepo.search(
+            queryEmbedding, options.getTopK() * 2
+        );
+
+        // 2. 关键词检索（BM25）
+        List&lt;ScoredDocument&gt; keywordResults = esClient.search(
+            query, options.getTopK() * 2
+        );
+
+        // 3. RRF 融合
+        List&lt;ScoredDocument&gt; fused = rrfFusion(vectorResults, keywordResults, 60);
+
+        // 4. 重排序（可选）
+        if (rerankingModel != null &amp;&amp; options.isRerank()) {
+            fused = rerank(fused, query);
+        }
+
+        return fused.stream().limit(options.getTopK()).toList();
+    }
+
+    private List&lt;ScoredDocument&gt; rrfFusion(
+            List&lt;ScoredDocument&gt; results1,
+            List&lt;ScoredDocument&gt; results2,
+            int k) {
+        Map&lt;String, ScoredDocument&gt; merged = new HashMap&lt;&gt;();
+
+        for (int rank = 0; rank &lt; results1.size(); rank++) {
+            String id = results1.get(rank).getId();
+            double score = 1.0 / (k + rank + 1);
+            merged.computeIfAbsent(id, key -&gt; new ScoredDocument(id))
+                  .addScore(score, &quot;vector&quot;);
+        }
+
+        for (int rank = 0; rank &lt; results2.size(); rank++) {
+            String id = results2.get(rank).getId();
+            double score = 1.0 / (k + rank + 1);
+            merged.computeIfAbsent(id, key -&gt; new ScoredDocument(id))
+                  .addScore(score, &quot;keyword&quot;);
+        }
+
+        return merged.values().stream()
+                .sorted(Comparator.comparingDouble(ScoredDocument::getTotalScore).reversed())
+                .limit(10)
+                .collect(Collectors.toList());
+    }
+}
+</code></pre>
+
+<p><strong>关键工程细节</strong>：
+- RRF（Reciprocal Rank Fusion）参数 k=60 是经验值
+- 双路检索各取 Top 20，融合后取 Top 10
+- 重排序使用 Cross-Encoder 模型（如 bge-reranker）</p>
+<h4 id="3rbac">练习3：RBAC 权限拦截器</h4>
+<p><strong>目标</strong>：基于部门/角色/密级的访问控制</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class PermissionInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean beforeHandle(Invocation inv) {
+        // 1. 获取当前用户
+        User currentUser = SecurityContext.getCurrentUser();
+
+        // 2. 获取资源权限要求
+        DocumentRequest request = inv.getArgument(0);
+        Document document = repository.findById(request.getDocumentId());
+
+        // 3. 部门匹配
+        if (!hasDepartmentAccess(currentUser, document)) {
+            throw new AccessDeniedException(&quot;无部门访问权限&quot;);
+        }
+
+        // 4. 密级匹配
+        if (!hasClearanceLevel(currentUser, document)) {
+            throw new AccessDeniedException(&quot;密级不足&quot;);
+        }
+
+        // 5. 角色匹配
+        if (!hasRolePermission(currentUser, document.getRequiredRole())) {
+            throw new AccessDeniedException(&quot;角色权限不足&quot;);
+        }
+
+        return true;
+    }
+
+    private boolean hasDepartmentAccess(User user, Document doc) {
+        // 管理员可访问所有
+        if (user.hasRole(&quot;ADMIN&quot;)) return true;
+        // 文档所属部门或用户所在部门匹配
+        return user.getDepartmentIds().contains(doc.getDepartmentId());
+    }
+
+    private boolean hasClearanceLevel(User user, Document doc) {
+        // 密级：公开(0) &lt; 内部(1) &lt; 机密(2) &lt; 绝密(3)
+        return user.getClearanceLevel() &gt;= doc.getClassification();
+    }
+}
+</code></pre>
+
+<h4 id="4">练习4：引用溯源中间件</h4>
+<p><strong>目标</strong>：返回答案时附带参考段落和页码</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class CitationMiddleware {
+
+    public ChatResponse withCitation(ChatRequest request, List&lt;ScoredDocument&gt; docs) {
+        // 1. 构造带引用的 Prompt
+        String context = buildCitedContext(docs);
+
+        ChatMessage message = ChatMessage.ofUserAugment(request.getQuery(), context);
+
+        // 2. 调用 LLM
+        ChatResponse response = chatModel.prompt(message).call();
+
+        // 3. 附加引用信息
+        response.setCitations(docs.stream()
+                .map(doc -&gt; new Citation(
+                    doc.getDocumentId(),
+                    doc.getPageNumber(),
+                    doc.getParagraphIndex(),
+                    doc.getText().substring(0, Math.min(200, doc.getText().length()))
+                ))
+                .toList());
+
+        return response;
+    }
+
+    private String buildCitedContext(List&lt;ScoredDocument&gt; docs) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i &lt; docs.size(); i++) {
+            ScoredDocument doc = docs.get(i);
+            sb.append(String.format(&quot;[%d] %s (页码: %d, 相关度: %.2f)\n&quot;,
+                i + 1, doc.getText(), doc.getPageNumber(), doc.getScore()));
+        }
+        return sb.toString();
+    }
+}
+</code></pre>
+
+<h3 id="143">14.3 项目实战</h3>
+<h4 id="1431">14.3.1 项目需求</h4>
+<p><strong>功能需求</strong>：
+1. 文档批量上传（支持 ZIP 批量导入）
+2. 多格式解析（PDF/Word/Excel/PPT/HTML/Markdown）
+3. 智能切分与向量化
+4. 混合检索（向量 + 关键词）
+5. 多租户权限隔离
+6. 引用溯源
+7. 管理后台（文档管理/用户管理/权限配置）</p>
+<p><strong>非功能需求</strong>：
+- 支持 1000+ 用户并发查询
+- 支持 10 万+ 文档管理
+- 响应时间 P95 &lt; 2s
+- 支持 SSO 集成（OAuth2/OIDC）</p>
+<h4 id="1432">14.3.2 技术栈</h4>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>技术选型</th>
+<th>选型理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>框架</td>
+<td>Solon 4.1.1 + Solon-AI</td>
+<td>轻量、高性能、AI 原生</td>
+</tr>
+<tr>
+<td>向量数据库</td>
+<td>PostgreSQL + pgvector</td>
+<td>复用现有 DB、ACID、易运维</td>
+</tr>
+<tr>
+<td>全文检索</td>
+<td>Elasticsearch 8.x</td>
+<td>BM25 算法成熟、中文分词优化</td>
+</tr>
+<tr>
+<td>缓存</td>
+<td>Redis 7.x</td>
+<td>热点查询缓存、会话存储</td>
+</tr>
+<tr>
+<td>文件存储</td>
+<td>MinIO</td>
+<td>S3 兼容、私有部署</td>
+</tr>
+<tr>
+<td>前端</td>
+<td>Vue 3 + Element Plus</td>
+<td>快速搭建管理后台</td>
+</tr>
+<tr>
+<td>监控</td>
+<td>Prometheus + Grafana</td>
+<td>指标采集、可视化</td>
+</tr>
+<tr>
+<td>日志</td>
+<td>ELK Stack</td>
+<td>集中日志、链路追踪</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1433">14.3.3 核心代码</h4>
+<p><strong>模块1：文档摄取管道</strong></p>
+<pre class="codehilite"><code class="language-java">@Configuration
+public class IngestionPipelineConfig {
+
+    @Bean
+    public IngestionPipeline ingestionPipeline(
+            DocumentStorage storage,
+            List&lt;DocumentLoader&gt; loaders,
+            TextSplitter splitter,
+            EmbeddingModel embeddingModel,
+            VectorRepository vectorRepo,
+            ElasticsearchClient esClient,
+            EventPublisher eventPublisher) {
+        return IngestionPipeline.builder()
+                .storage(storage)
+                .loaders(loaders)
+                .splitter(splitter)
+                .embedding(embeddingModel)
+                .vectorRepo(vectorRepo)
+                .esClient(esClient)
+                .eventPublisher(eventPublisher)
+                .build();
+    }
+}
+
+@Singleton
+public class IngestionPipeline {
+    // 配置参数
+    private static final int BATCH_SIZE = 100;
+    private static final int CHUNK_SIZE = 500;
+    private static final int CHUNK_OVERLAP = 50;
+
+    private final DocumentStorage storage;
+    private final List&lt;DocumentLoader&gt; loaders;
+    private final TextSplitter splitter;
+    private final EmbeddingModel embeddingModel;
+    private final VectorRepository vectorRepo;
+    private final ElasticsearchClient esClient;
+    private final EventPublisher eventPublisher;
+
+    public IngestionResult process(MultipartFile file, String userId) throws Exception {
+        long start = System.currentTimeMillis();
+
+        // 1. 存储原始文件
+        String fileId = storage.store(file);
+
+        // 2. 格式检测与解析
+        String mimeType = detectMimeType(file.getInputStream());
+        DocumentLoader loader = loaders.stream()
+                .filter(l -&gt; l.supports(mimeType))
+                .findFirst()
+                .orElseThrow(() -&gt; new UnsupportedFormatException(mimeType));
+
+        Document document = loader.load(file.getInputStream());
+
+        // 3. 元数据提取
+        DocumentMetadata metadata = extractMetadata(document, file, userId);
+
+        // 4. 切分（保留结构）
+        List&lt;TextSplit&gt; splits = splitter.split(document, DocumentSplitOptions.builder()
+                .chunkSize(CHUNK_SIZE)
+                .overlap(CHUNK_OVERLAP)
+                .preserveHeaders(true)
+                .preserveTables(true)
+                .preserveCodeBlocks(true)
+                .build());
+
+        // 5. 批量向量化
+        List&lt;Embedding&gt; embeddings = batchEmbed(splits);
+
+        // 6. 批量存储（pgvector）
+        List&lt;DocumentChunk&gt; chunks = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; splits.size(); i++) {
+            chunks.add(new DocumentChunk(splits.get(i), embeddings.get(i), metadata));
+        }
+        vectorRepo.batchSave(chunks);
+
+        // 7. 同步到 ES（全文检索）
+        esClient.indexDocument(document, metadata);
+
+        // 8. 发布事件（异步通知）
+        eventPublisher.publish(new DocumentIngestedEvent(document.getId(), splits.size()));
+
+        long duration = System.currentTimeMillis() - start;
+        log.info(&quot;Document ingested: id={}, chunks={}, duration={}ms&quot;, 
+            document.getId(), splits.size(), duration);
+
+        return IngestionResult.success(document.getId(), splits.size(), duration);
+    }
+
+    private List&lt;Embedding&gt; batchEmbed(List&lt;TextSplit&gt; splits) {
+        // 分批处理，每批 BATCH_SIZE 个
+        List&lt;Embedding&gt; allEmbeddings = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; splits.size(); i += BATCH_SIZE) {
+            int end = Math.min(i + BATCH_SIZE, splits.size());
+            List&lt;String&gt; texts = splits.subList(i, end).stream()
+                    .map(TextSplit::getText)
+                    .toList();
+            allEmbeddings.addAll(embeddingModel.embed(texts));
+        }
+        return allEmbeddings;
+    }
+}
+</code></pre>
+
+<p><strong>模块2：混合检索引擎</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class HybridSearchEngine {
+    private static final int RRF_K = 60;
+    private static final int RETRIEVAL_TOP_K = 20;
+    private static final int FINAL_TOP_K = 10;
+
+    private final VectorRepository vectorRepo;
+    private final ElasticsearchClient esClient;
+    private final EmbeddingModel embeddingModel;
+    private final RerankingModel rerankingModel;
+    private final CacheManager cacheManager;
+
+    @Inject
+    public HybridSearchEngine(VectorRepository vectorRepo,
+                             ElasticsearchClient esClient,
+                             EmbeddingModel embeddingModel,
+                             @Nullable RerankingModel rerankingModel,
+                             CacheManager cacheManager) {
+        this.vectorRepo = vectorRepo;
+        this.esClient = esClient;
+        this.embeddingModel = embeddingModel;
+        this.rerankingModel = rerankingModel;
+        this.cacheManager = cacheManager;
+    }
+
+    public List&lt;ScoredDocument&gt; search(String query, SearchContext context) {
+        // 1. 检查缓存
+        String cacheKey = &quot;search:&quot; + DigestUtil.sha256(query + context.getUserId());
+        List&lt;ScoredDocument&gt; cached = cacheManager.get(cacheKey);
+        if (cached != null) {
+            log.debug(&quot;Cache hit for query: {}&quot;, query);
+            return cached;
+        }
+
+        // 2. 向量检索
+        Embedding queryEmbedding = embeddingModel.embed(query);
+        List&lt;ScoredDocument&gt; vectorResults = vectorRepo.search(queryEmbedding, RETRIEVAL_TOP_K)
+                .stream()
+                .filter(doc -&gt; hasPermission(context.getUser(), doc))
+                .toList();
+
+        // 3. 关键词检索
+        List&lt;ScoredDocument&gt; keywordResults = esClient.search(query, RETRIEVAL_TOP_K)
+                .stream()
+                .filter(doc -&gt; hasPermission(context.getUser(), doc))
+                .toList();
+
+        // 4. RRF 融合
+        List&lt;ScoredDocument&gt; fused = rrfFusion(vectorResults, keywordResults, RRF_K);
+
+        // 5. 重排序（可选）
+        if (rerankingModel != null &amp;&amp; context.isRerank()) {
+            fused = rerank(fused, query);
+        }
+
+        // 6. 缓存结果（5分钟）
+        List&lt;ScoredDocument&gt; result = fused.stream().limit(FINAL_TOP_K).toList();
+        cacheManager.put(cacheKey, result, Duration.ofMinutes(5));
+
+        return result;
+    }
+
+    private boolean hasPermission(User user, ScoredDocument doc) {
+        // 权限过滤逻辑（见练习3）
+        return true; // 简化示例
+    }
+}
+</code></pre>
+
+<p><strong>模块3：问答 API（带引用）</strong></p>
+<pre class="codehilite"><code class="language-java">@RestController
+@RequestMapping(&quot;/api/chat&quot;)
+public class KnowledgeChatController {
+    private final HybridSearchEngine searchEngine;
+    private final ChatModel chatModel;
+    private final CitationMiddleware citationMiddleware;
+    private final MetricsService metricsService;
+
+    @Inject
+    public KnowledgeChatController(HybridSearchEngine searchEngine,
+                                   ChatModel chatModel,
+                                   CitationMiddleware citationMiddleware,
+                                   MetricsService metricsService) {
+        this.searchEngine = searchEngine;
+        this.chatModel = chatModel;
+        this.citationMiddleware = citationMiddleware;
+        this.metricsService = metricsService;
+    }
+
+    @Post
+    public ChatResponse chat(@Body ChatRequest request, HttpServletRequest httpRequest) {
+        long start = System.currentTimeMillis();
+        User user = SecurityContext.getCurrentUser();
+
+        try {
+            // 1. 检索
+            List&lt;ScoredDocument&gt; docs = searchEngine.search(
+                request.getQuery(),
+                SearchContext.builder()
+                    .user(user)
+                    .rerank(request.isRerank())
+                    .build()
+            );
+
+            // 2. 构造 Prompt（带引用）
+            ChatResponse response = citationMiddleware.withCitation(request, docs);
+
+            // 3. 记录指标
+            long latency = System.currentTimeMillis() - start;
+            metricsService.recordQuery(latency, docs.size());
+
+            return response;
+        } catch (Exception e) {
+            log.error(&quot;Chat failed: query={}, user={}&quot;, request.getQuery(), user.getId(), e);
+            throw e;
+        }
+    }
+}
+</code></pre>
+
+<p><strong>模块4：管理后台（文档管理/用户管理）</strong></p>
+<pre class="codehilite"><code class="language-java">@Controller
+@RequestMapping(&quot;/admin&quot;)
+@Permission(role = &quot;ADMIN&quot;)
+public class AdminController {
+    private final DocumentService documentService;
+    private final UserService userService;
+
+    @Inject
+    public AdminController(DocumentService documentService, UserService userService) {
+        this.documentService = documentService;
+        this.userService = userService;
+    }
+
+    // 文档列表（分页）
+    @Get(&quot;/documents&quot;)
+    public PagedResult&lt;DocumentVO&gt; listDocuments(@Param(&quot;page&quot;) int page,
+                                                  @Param(&quot;size&quot;) int size,
+                                                  @Param(&quot;keyword&quot;) String keyword) {
+        return documentService.search(keyword, page, size);
+    }
+
+    // 删除文档
+    @Delete(&quot;/documents/{id}&quot;)
+    public Result deleteDocument(@Path String id) {
+        documentService.delete(id);
+        return Result.success(&quot;删除成功&quot;);
+    }
+
+    // 重新处理文档
+    @Post(&quot;/documents/{id}/reprocess&quot;)
+    public Result reprocess(@Path String id) {
+        documentService.reprocess(id);
+        return Result.success(&quot;重新处理中&quot;);
+    }
+
+    // 用户管理
+    @Get(&quot;/users&quot;)
+    public PagedResult&lt;UserVO&gt; listUsers(@Param(&quot;page&quot;) int page, @Param(&quot;size&quot;) int size) {
+        return userService.list(page, size);
+    }
+}
+</code></pre>
+
+<p><strong>模块5：质量评估</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class QualityEvaluationService {
+    private final FeedbackRepository feedbackRepo;
+    private final MetricsCalculator metricsCalculator;
+
+    public void recordFeedback(String queryId, boolean thumbsUp, @Nullable String comment) {
+        Feedback feedback = new Feedback(queryId, thumbsUp, comment);
+        feedbackRepo.save(feedback);
+
+        // 计算实时指标
+        double thumbsUpRate = metricsCalculator.calculateThumbsUpRate(queryId);
+        log.info(&quot;Query {} thumbs up rate: {}%&quot;, queryId, String.format(&quot;%.2f&quot;, thumbsUpRate * 100));
+    }
+
+    public QualityReport generateReport(DateRange range) {
+        // 统计指标
+        long totalQueries = feedbackRepo.count(range);
+        double avgLatency = metricsCalculator.calculateAvgLatency(range);
+        double thumbsUpRate = metricsCalculator.calculateThumbsUpRate(range);
+        Map&lt;String, Integer&gt; topQueries = metricsCalculator.getTopQueries(range);
+
+        return QualityReport.builder()
+                .totalQueries(totalQueries)
+                .avgLatency(avgLatency)
+                .thumbsUpRate(thumbsUpRate)
+                .topQueries(topQueries)
+                .build();
+    }
+}
+</code></pre>
+
+<h4 id="1434">14.3.4 部署与运维</h4>
+<p><strong>Docker Compose 部署</strong></p>
+<pre class="codehilite"><code class="language-yaml">version: '3.8'
+services:
+  app:
+    image: your-company/knowledge-platform:latest
+    ports:
+      - &quot;8080:8080&quot;
+    environment:
+      - SOLON_AI_CHAT_DEFAULT_PROVIDER=ollama
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pg:5432/knowledge_db
+      - SPRING_REDIS_HOST=redis
+      - SPRING_ELASTICSEARCH_HOST=es
+    depends_on:
+      - pg
+      - redis
+      - es
+      - ollama
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+
+  pg:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: knowledge_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redisdata:/data
+
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ./models:/root/.ollama
+    command: serve
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - &quot;9090:9090&quot;
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - &quot;3000:3000&quot;
+    volumes:
+      - grafanadata:/var/lib/grafana
+
+volumes:
+  pgdata
+  redisdata
+  esdata
+  grafanadata
+</code></pre>
+
+<p><strong>监控指标（Prometheus）</strong></p>
+<pre class="codehilite"><code class="language-yaml"># prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'knowledge-platform'
+    static_configs:
+      - targets: ['app:8080']
+    metrics_path: '/actuator/prometheus'
+</code></pre>
+
+<p><strong>性能优化清单</strong>：
+1. 向量检索缓存（Redis，热点查询）
+2. 批量向量化（减少 LLM 调用）
+3. 连接池优化（HikariCP，最大连接数 20）
+4. 索引优化（pgvector HNSW 索引，ES 分片数 3）
+5. CDN 静态资源加速</p>
+<p><strong>安全合规清单</strong>：
+1. API 认证（JWT + OAuth2 SSO）
+2. 数据加密（传输 TLS，存储 AES-256）
+3. 审计日志（所有查询、上传、删除操作）
+4. 敏感信息脱敏（正则匹配手机号/身份证/银行卡）
+5. 定期备份（pg_dump + MinIO 版本控制）</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="13.html" class="nav-prev">← 第13章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

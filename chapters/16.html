@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第16章 数据智能分析与决策支持系统 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" >第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" >第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" >第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" >第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" >第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" >第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" >第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" >第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" >第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" >第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="161">16.1 理论讲解</h3>
+<h4 id="1611">16.1.1 数据智能化的核心价值</h4>
+<p><strong>行业痛点</strong>：
+- 业务人员不会写 SQL，依赖数据团队，响应周期长
+- 报表需求多，数据团队成为瓶颈
+- 数据孤岛，跨库关联分析困难
+- 决策缺乏数据支撑，拍脑袋多</p>
+<p><strong>AI 赋能数据分析的三个层次</strong>：
+1. <strong>辅助层</strong>：SQL 生成、报表自动化
+2. <strong>智能层</strong>：异常检测、趋势预测、关联分析
+3. <strong>决策层</strong>：自动生成洞察报告、决策建议</p>
+<h4 id="1612-text2sql">16.1.2 Text2SQL 技术演进</h4>
+<p><strong>规则引擎时代（Template-based）</strong>
+- 基于预定义模板匹配
+- 优点：准确率高、可控性强
+- 缺点：覆盖场景有限、维护成本高</p>
+<p><strong>小模型微调时代（T5/LLaMA）</strong>
+- 在领域数据上微调小模型
+- 优点：成本低、响应快
+- 缺点：复杂查询准确率低</p>
+<p><strong>大模型时代（GPT-4/Claude/Qwen）</strong>
+- 基于 Schema 描述 + Few-shot
+- 优点：理解能力强、覆盖场景广
+- 缺点：成本高、需要提示工程</p>
+<p><strong>Solon-AI 方案</strong>：
+- 结合大模型 + Schema 描述 + 验证器
+- 生成 SQL 后通过 Apache Calcite 验证语法
+- 敏感操作拦截（DROP/DELETE/UPDATE）</p>
+<h4 id="1613">16.1.3 系统架构设计</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│          BI 前端 (Superset/Metabase)     │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│      Solon-AI 数据智能平台               │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Text2SQL │  │  Data    │             │
+│  │  Engine  │  │  Agent   │             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────┐  ┌──────────┐             │
+│  │   Flow   │  │  Report  │             │
+│  │  (ETL)   │  │ Generator│             │
+│  └──────────┘  └──────────┘             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           数据层                         │
+│  PostgreSQL │ MySQL │ Redis │ ES        │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="1614">16.1.4 关键技术决策</h4>
+<p><strong>Q1：Schema 描述策略</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DDL 原文</td>
+<td>准确、完整</td>
+<td>冗长、含噪声</td>
+<td>技术用户</td>
+</tr>
+<tr>
+<td>自然语言描述</td>
+<td>简洁、易读</td>
+<td>可能遗漏细节</td>
+<td>业务用户</td>
+</tr>
+<tr>
+<td>混合（DDL + 注释）</td>
+<td>兼顾准确和易读</td>
+<td>维护成本高</td>
+<td>企业级</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：混合策略 - DDL 为主，关键字段附加自然语言注释</p>
+<p><strong>Q2：SQL 安全审查</strong></p>
+<table>
+<thead>
+<tr>
+<th>风险操作</th>
+<th>审查策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DROP TABLE/DATABASE</td>
+<td>禁止</td>
+</tr>
+<tr>
+<td>DELETE/UPDATE 无 WHERE</td>
+<td>禁止</td>
+</tr>
+<tr>
+<td>跨库 JOIN</td>
+<td>限制数据源</td>
+</tr>
+<tr>
+<td>全表扫描</td>
+<td>告警 + 限制</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：使用 Apache Calcite 解析 SQL，实现语法验证和安全审查</p>
+<p><strong>Q3：结果缓存策略</strong></p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>缓存策略</th>
+<th>TTL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>相同查询</td>
+<td>缓存完整结果</td>
+<td>5 分钟</td>
+</tr>
+<tr>
+<td>相似查询</td>
+<td>缓存 Schema + 计划</td>
+<td>1 小时</td>
+</tr>
+<tr>
+<td>元数据查询</td>
+<td>缓存表结构</td>
+<td>24 小时</td>
+</tr>
+</tbody>
+</table>
+<h3 id="162">16.2 实践练习</h3>
+<h4 id="1-schema-text2sql">练习1：基于 Schema 的 Text2SQL</h4>
+<p><strong>目标</strong>：实现自然语言转 SQL</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class Text2SqlEngine {
+    private final ChatModel chatModel;
+    private final SchemaManager schemaManager;
+    private final SqlValidator validator;
+
+    public String generateSql(String naturalLanguage, DataSource dataSource) {
+        // 1. 获取 Schema 描述
+        String schemaDescription = schemaManager.getDescription(dataSource);
+
+        // 2. 构造 Prompt
+        String prompt = String.format(&quot;&quot;&quot;
+            你是一个 SQL 专家。根据以下数据库 Schema，将自然语言查询转为 SQL。
+
+            Schema:
+            %s
+
+            要求：
+            1. 只使用 SELECT 语句，禁止 DROP/DELETE/UPDATE
+            2. 使用标准 SQL 语法
+            3. 包含 LIMIT 1000 防止全表扫描
+            4. 只输出 SQL，不要解释
+
+            查询：%s
+            &quot;&quot;&quot;, schemaDescription, naturalLanguage);
+
+        // 3. 调用 LLM
+        ChatResponse response = chatModel.prompt(prompt).call();
+        String sql = response.getMessage().getContent();
+
+        // 4. 验证 SQL
+        ValidationResult result = validator.validate(sql, dataSource);
+        if (!result.isValid()) {
+            throw new SqlGenerationException(&quot;Invalid SQL: &quot; + result.getErrorMessage());
+        }
+
+        return sql;
+    }
+}
+</code></pre>
+
+<p><strong>关键工程细节</strong>：
+- Schema 描述需要精简（只包含表名、字段名、类型、注释）
+- 使用 Apache Calcite 做语法验证
+- 敏感操作拦截（正则匹配 DROP/DELETE/UPDATE）</p>
+<h4 id="2sql">练习2：SQL 安全审查器</h4>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SqlSecurityReviewer {
+    private static final Pattern DANGEROUS_PATTERN = 
+        Pattern.compile(&quot;(?i)(DROP|DELETE|UPDATE|TRUNCATE|ALTER)\\s+(TABLE|DATABASE|INDEX)&quot;);
+
+    public SecurityReviewResult review(String sql) {
+        List&lt;String&gt; violations = new ArrayList&lt;&gt;();
+
+        // 1. 检查危险操作
+        Matcher matcher = DANGEROUS_PATTERN.matcher(sql);
+        while (matcher.find()) {
+            violations.add(&quot;检测到危险操作: &quot; + matcher.group());
+        }
+
+        // 2. 检查是否带 WHERE 的 DELETE/UPDATE
+        if (sql.matches(&quot;(?i).*\\bDELETE\\b.*\\bFROM\\b(?!.*\\bWHERE\\b).*&quot;)) {
+            violations.add(&quot;DELETE 语句缺少 WHERE 条件&quot;);
+        }
+
+        // 3. 检查全表扫描
+        if (!sql.contains(&quot;LIMIT&quot;) &amp;&amp; !sql.matches(&quot;(?i).*\\bWHERE\\b.*&quot;)) {
+            violations.add(&quot;查询缺少 WHERE 条件，可能导致全表扫描&quot;);
+        }
+
+        return SecurityReviewResult.builder()
+                .safe(violations.isEmpty())
+                .violations(violations)
+                .build();
+    }
+}
+</code></pre>
+
+<h4 id="3">练习3：数据血缘追踪</h4>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class DataLineageTracker {
+    private final FlowEngine flowEngine;
+
+    public LineageGraph buildLineage(String tableName) {
+        // 1. 查找所有引用该表的 ETL Flow
+        List&lt;FlowDefinition&gt; upstreamFlows = flowEngine.findUpstream(tableName);
+
+        // 2. 查找所有使用该表的报表/查询
+        List&lt;QueryRecord&gt; downstreamQueries = queryLogRepository.findByTable(tableName);
+
+        // 3. 构建血缘图
+        LineageGraph graph = new LineageGraph(tableName);
+
+        for (FlowDefinition flow : upstreamFlows) {
+            graph.addUpstream(flow.getSourceTable(), flow.getTransformation());
+        }
+
+        for (QueryRecord query : downstreamQueries) {
+            graph.addDownstream(query.getQueryId(), query.getQueryType());
+        }
+
+        return graph;
+    }
+}
+</code></pre>
+
+<h4 id="4">练习4：智能报表生成</h4>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SmartReportGenerator {
+    private final Text2SqlEngine text2SqlEngine;
+    private final ChartGenerator chartGenerator;
+
+    public Report generate(String topic, DateRange range) {
+        // 1. 使用 LLM 分解报告需求
+        List&lt;ReportSection&gt; sections = planReport(topic);
+
+        // 2. 逐节生成
+        List&lt;ReportSectionResult&gt; results = new ArrayList&lt;&gt;();
+        for (ReportSection section : sections) {
+            // 2.1 生成 SQL
+            String sql = text2SqlEngine.generateSql(section.getQuery(), section.getDataSource());
+
+            // 2.2 执行查询
+            QueryResult data = jdbcTemplate.query(sql);
+
+            // 2.3 生成图表
+            Chart chart = chartGenerator.generate(data, section.getChartType());
+
+            results.add(ReportSectionResult.builder()
+                    .title(section.getTitle())
+                    .data(data)
+                    .chart(chart)
+                    .insight(generateInsight(data, section.getInsightPrompt()))
+                    .build());
+        }
+
+        return Report.builder()
+                .title(topic)
+                .range(range)
+                .sections(results)
+                .build();
+    }
+
+    private String generateInsight(QueryResult data, String prompt) {
+        ChatResponse response = chatModel.prompt(prompt)
+                .system(&quot;你是数据分析专家，请分析以下数据并给出洞察&quot;)
+                .call();
+        return response.getMessage().getContent();
+    }
+}
+</code></pre>
+
+<h3 id="163">16.3 项目实战</h3>
+<h4 id="1631">16.3.1 项目需求</h4>
+<p><strong>功能需求</strong>：
+1. 自然语言查询转 SQL
+2. SQL 安全审查
+3. 多数据源管理（PostgreSQL/MySQL）
+4. 自动报表生成
+5. 数据血缘追踪</p>
+<p><strong>非功能需求</strong>：
+- 支持 50+ 数据表
+- SQL 生成准确率 &gt; 80%
+- 查询响应时间 &lt; 3s
+- 支持权限隔离（行级/列级）</p>
+<h4 id="1632">16.3.2 技术栈</h4>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>技术选型</th>
+<th>选型理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>框架</td>
+<td>Solon 4.1.1 + Solon-AI</td>
+<td>轻量、高性能、AI 原生</td>
+</tr>
+<tr>
+<td>SQL 解析</td>
+<td>Apache Calcite</td>
+<td>语法验证、优化</td>
+</tr>
+<tr>
+<td>数据源</td>
+<td>PostgreSQL + MySQL</td>
+<td>多数据源支持</td>
+</tr>
+<tr>
+<td>缓存</td>
+<td>Redis</td>
+<td>查询结果缓存</td>
+</tr>
+<tr>
+<td>可视化</td>
+<td>ECharts</td>
+<td>图表丰富、易集成</td>
+</tr>
+<tr>
+<td>调度</td>
+<td>XXL-Job</td>
+<td>ETL 定时任务</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1633">16.3.3 核心代码</h4>
+<p><strong>模块1：元数据管理服务</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SchemaManager {
+    private final DataSourceMetadataRepository repository;
+
+    public String getDescription(DataSource dataSource) {
+        // 1. 获取所有表
+        List&lt;TableMetadata&gt; tables = repository.getTables(dataSource);
+
+        // 2. 获取所有字段
+        List&lt;ColumnMetadata&gt; columns = repository.getColumns(dataSource);
+
+        // 3. 构建 Schema 描述
+        StringBuilder sb = new StringBuilder();
+        for (TableMetadata table : tables) {
+            sb.append(&quot;表 &quot;).append(table.getName()).append(&quot;: &quot;).append(table.getComment()).append(&quot;\n&quot;);
+
+            List&lt;ColumnMetadata&gt; tableColumns = columns.stream()
+                    .filter(c -&gt; c.getTableName().equals(table.getName()))
+                    .toList();
+
+            for (ColumnMetadata col : tableColumns) {
+                sb.append(&quot;  - &quot;).append(col.getName())
+                  .append(&quot; (&quot;).append(col.getType()).append(&quot;)&quot;)
+                  .append(&quot;: &quot;).append(col.getComment()).append(&quot;\n&quot;);
+            }
+            sb.append(&quot;\n&quot;);
+        }
+
+        return sb.toString();
+    }
+}
+</code></pre>
+
+<p><strong>模块2：Text2SQL 引擎</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class Text2SqlEngine {
+    private final ChatModel chatModel;
+    private final SchemaManager schemaManager;
+    private final SqlSecurityReviewer securityReviewer;
+
+    public SqlGenerationResult generate(String naturalLanguage, DataSource dataSource) {
+        // 1. 获取 Schema
+        String schema = schemaManager.getDescription(dataSource);
+
+        // 2. 构造 Prompt
+        String prompt = buildPrompt(naturalLanguage, schema);
+
+        // 3. 调用 LLM
+        ChatResponse response = chatModel.prompt(prompt).call();
+        String sql = extractSql(response.getMessage().getContent());
+
+        // 4. 安全审查
+        SecurityReviewResult review = securityReviewer.review(sql);
+        if (!review.isSafe()) {
+            return SqlGenerationResult.fail(&quot;SQL 不安全: &quot; + review.getViolations());
+        }
+
+        // 5. 语法验证（可选）
+        ValidationResult validation = validator.validate(sql, dataSource);
+        if (!validation.isValid()) {
+            return SqlGenerationResult.fail(&quot;SQL 语法错误: &quot; + validation.getErrorMessage());
+        }
+
+        return SqlGenerationResult.success(sql);
+    }
+
+    private String buildPrompt(String query, String schema) {
+        return String.format(&quot;&quot;&quot;
+            你是一个 SQL 专家。根据以下数据库 Schema，将自然语言查询转为 SQL。
+
+            Schema:
+            %s
+
+            要求：
+            1. 只使用 SELECT 语句，禁止 DROP/DELETE/UPDATE
+            2. 使用标准 SQL 语法
+            3. 包含 LIMIT 1000 防止全表扫描
+            4. 只输出 SQL，不要解释
+
+            查询：%s
+            &quot;&quot;&quot;, schema, query);
+    }
+}
+</code></pre>
+
+<p><strong>模块3：SQL 安全审查器</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SqlSecurityReviewer {
+    private static final Pattern DANGEROUS_PATTERN = 
+        Pattern.compile(&quot;(?i)(DROP|DELETE|UPDATE|TRUNCATE|ALTER)\\s+(TABLE|DATABASE|INDEX)&quot;);
+    private static final Pattern DELETE_WITHOUT_WHERE = 
+        Pattern.compile(&quot;(?i)\\bDELETE\\b.*\\bFROM\\b(?!.*\\bWHERE\\b)&quot;);
+
+    public SecurityReviewResult review(String sql) {
+        List&lt;String&gt; violations = new ArrayList&lt;&gt;();
+
+        // 1. 检查危险操作
+        Matcher matcher = DANGEROUS_PATTERN.matcher(sql);
+        while (matcher.find()) {
+            violations.add(&quot;检测到危险操作: &quot; + matcher.group());
+        }
+
+        // 2. 检查 DELETE 是否有 WHERE
+        if (DELETE_WITHOUT_WHERE.matcher(sql).find()) {
+            violations.add(&quot;DELETE 语句缺少 WHERE 条件&quot;);
+        }
+
+        // 3. 检查全表扫描
+        if (!sql.contains(&quot;LIMIT&quot;) &amp;&amp; !sql.toLowerCase().contains(&quot;where&quot;)) {
+            violations.add(&quot;查询缺少 WHERE 条件，可能导致全表扫描&quot;);
+        }
+
+        return SecurityReviewResult.builder()
+                .safe(violations.isEmpty())
+                .violations(violations)
+                .build();
+    }
+}
+</code></pre>
+
+<p><strong>模块4：查询结果可视化</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class QueryResultVisualizer {
+    private final ChartGenerator chartGenerator;
+
+    public VisualizationResult visualize(QueryResult result, String preferredChart) {
+        // 1. 自动推荐图表类型
+        String chartType = preferredChart != null ? preferredChart : recommendChartType(result);
+
+        // 2. 生成图表配置
+        Chart chart = chartGenerator.generate(result, chartType);
+
+        // 3. 生成数据摘要
+        String summary = generateSummary(result);
+
+        return VisualizationResult.builder()
+                .chart(chart)
+                .summary(summary)
+                .data(result)
+                .build();
+    }
+
+    private String recommendChartType(QueryResult result) {
+        // 根据数据特征推荐图表
+        if (result.getColumns().size() == 2 &amp;&amp; result.getRows().size() &gt; 10) {
+            return &quot;line&quot;; // 时序数据
+        } else if (result.getColumns().size() == 2 &amp;&amp; result.getRows().size() &lt;= 10) {
+            return &quot;pie&quot;; // 占比数据
+        } else {
+            return &quot;table&quot;; // 明细数据
+        }
+    }
+}
+</code></pre>
+
+<p><strong>模块5：数据血缘追踪</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class DataLineageService {
+    private final EtlFlowRepository flowRepository;
+    private final QueryLogRepository queryLogRepository;
+
+    public LineageGraph buildLineage(String tableName) {
+        LineageGraph graph = new LineageGraph(tableName);
+
+        // 1. 上游 ETL（表级依赖）
+        List&lt;EtlFlow&gt; upstreamFlows = flowRepository.findByTargetTable(tableName);
+        for (EtlFlow flow : upstreamFlows) {
+            graph.addUpstream(flow.getSourceTables(), flow.getTransformation());
+        }
+
+        // 2. 下游查询（谁在用这个表）
+        List&lt;QueryLog&gt; downstreamQueries = queryLogRepository.findByTable(tableName);
+        for (QueryLog log : downstreamQueries) {
+            graph.addDownstream(log.getQueryId(), log.getQueryType());
+        }
+
+        return graph;
+    }
+}
+</code></pre>
+
+<h4 id="1634">16.3.4 部署与运维</h4>
+<p><strong>多数据源连接池管理</strong></p>
+<pre class="codehilite"><code class="language-yaml"># application.yml
+solon:
+  datasource:
+    - name: primary
+      url: jdbc:postgresql://pg:5432/primary_db
+      username: user
+      password: pass
+      hikari:
+        maximum-pool-size: 20
+        minimum-idle: 5
+    - name: secondary
+      url: jdbc:mysql://mysql:3306/secondary_db
+      username: user
+      password: pass
+      hikari:
+        maximum-pool-size: 10
+        minimum-idle: 3
+</code></pre>
+
+<p><strong>SQL 执行日志与审计</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SqlAuditInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean beforeHandle(Invocation inv) {
+        if (inv.getMethod().getName().equals(&quot;executeQuery&quot;)) {
+            String sql = inv.getArgument(0);
+            User user = SecurityContext.getCurrentUser();
+
+            log.info(&quot;SQL executed: user={}, sql={}&quot;, user.getId(), sql);
+
+            // 记录审计日志
+            auditLogRepository.save(new SqlAuditLog(user.getId(), sql, System.currentTimeMillis()));
+        }
+        return true;
+    }
+}
+</code></pre>
+
+<p><strong>慢查询优化与告警</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SlowQueryMonitor {
+    private static final Duration SLOW_QUERY_THRESHOLD = Duration.ofSeconds(3);
+
+    @Subscribe
+    public void onQueryCompleted(QueryCompletedEvent event) {
+        if (event.getDuration().compareTo(SLOW_QUERY_THRESHOLD) &gt; 0) {
+            log.warn(&quot;Slow query detected: sql={}, duration={}ms&quot;, 
+                event.getSql(), event.getDuration().toMillis());
+
+            // 发送告警
+            alertService.send(&quot;慢查询告警&quot;, event);
+        }
+    }
+}
+</code></pre>
+
+<p><strong>监控指标</strong>：
+1. 查询响应时间（P95 &lt; 3s）
+2. SQL 生成准确率（&gt; 80%）
+3. 缓存命中率（&gt; 70%）
+4. 慢查询比例（&lt; 5%）</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="15.html" class="nav-prev">← 第15章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

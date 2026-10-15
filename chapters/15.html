@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第15章 代码智能助手与研发效能平台 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" >第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" >第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" >第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" >第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" >第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" >第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" >第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" >第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" >第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" >第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="151">15.1 理论讲解</h3>
+<h4 id="1511-ai">15.1.1 研发效能的 AI 化转型</h4>
+<p><strong>行业现状</strong>：
+- 代码库规模膨胀：百万行级代码库成为常态
+- 技术债务累积：平均每个项目有 20-30% 的代码需要重构
+- 知识断层：核心开发者离职带走关键知识
+- 审查瓶颈：资深工程师 30-50% 时间花在代码审查上</p>
+<p><strong>AI 赋能研发效能的三个层次</strong>：
+1. <strong>辅助层</strong>：代码补全、文档生成、注释提取
+2. <strong>审查层</strong>：自动代码审查、安全漏洞扫描、性能建议
+3. <strong>智能层</strong>：架构推荐、技术债务评估、跨项目复用</p>
+<h4 id="1512">15.1.2 代码智能的核心技术</h4>
+<p><strong>1. LSP（Language Server Protocol）</strong></p>
+<ul>
+<li>提供代码补全、跳转定义、查找引用、诊断错误</li>
+<li>支持 Java/Go/Python/TypeScript 等主流语言</li>
+<li>Solon-AI 的 <code>solon-ai-talents</code> 中包含 LSP Talent</li>
+</ul>
+<p><strong>2. AST（抽象语法树）分析</strong></p>
+<ul>
+<li>解析代码结构（类/方法/变量/注释）</li>
+<li>识别设计模式、代码坏味道</li>
+<li>计算圈复杂度、代码行数等度量指标</li>
+</ul>
+<p><strong>3. 代码语义索引</strong></p>
+<ul>
+<li>基于代码结构 + 注释 + 变量名</li>
+<li>支持自然语言查询（"查找所有处理用户登录的代码"）</li>
+<li>结合 Lucene 实现全文检索</li>
+</ul>
+<p><strong>4. 代码 Diff 与变更分析</strong></p>
+<ul>
+<li>识别新增/删除/修改的代码行</li>
+<li>分析变更影响范围（依赖的类/方法）</li>
+<li>生成变更摘要</li>
+</ul>
+<h4 id="1513">15.1.3 系统架构设计</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│          IDE 插件层 (JetBrains/VSCode)   │
+└─────────────────────────────────────────┘
+                    ↓ MCP/AGUI
+┌─────────────────────────────────────────┐
+│      Solon-AI 代码智能平台               │
+│  ┌──────────┐  ┌──────────┐             │
+│  │   LSP    │  │  Code    │             │
+│  │  Server  │  │  Agent   │             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────┐  ┌──────────┐             │
+│  │  Diff    │  │ Review   │             │
+│  │ Analyzer │  │  Bot     │             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────────────────────┐           │
+│  │    Lucene Code Index     │           │
+│  └──────────────────────────┘           │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           代码仓库 (Git)                 │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="1514">15.1.4 关键技术决策</h4>
+<p><strong>Q1：本地代码库 vs Git 远程仓库？</strong></p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>本地代码库</td>
+<td>实时性好、隐私安全</td>
+<td>需部署索引服务</td>
+<td>企业内部、保密项目</td>
+</tr>
+<tr>
+<td>Git 远程仓库</td>
+<td>集中管理、无需本地存储</td>
+<td>网络延迟、权限复杂</td>
+<td>开源项目、分布式团队</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：企业级采用本地代码库 + Git Webhook 增量同步</p>
+<p><strong>Q2：增量索引 vs 全量索引？</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>全量索引</td>
+<td>实现简单、一致性高</td>
+<td>耗时久、资源消耗大</td>
+<td>代码库 &lt; 10 万行</td>
+</tr>
+<tr>
+<td>增量索引</td>
+<td>快速、资源消耗小</td>
+<td>实现复杂、需处理依赖</td>
+<td>代码库 &gt; 10 万行</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：首次全量索引，后续 Git Webhook 触发增量索引</p>
+<p><strong>Q3：规则引擎 vs LLM 审查？</strong></p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规则引擎</td>
+<td>确定性强、速度快</td>
+<td>覆盖不全、维护成本高</td>
+<td>规范检查（命名/格式）</td>
+</tr>
+<tr>
+<td>LLM 审查</td>
+<td>灵活、理解语义</td>
+<td>不确定、成本高</td>
+<td>架构/安全/性能审查</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：混合模式 - 规则引擎做前置过滤，LLM 做深度审查</p>
+<h3 id="152">15.2 实践练习</h3>
+<h4 id="1-lsp">练习1：基于 LSP 的代码语义搜索</h4>
+<p><strong>目标</strong>：使用 LSP 协议实现代码语义搜索</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class LspCodeSearchService {
+    private final LspClient lspClient;
+    private final LuceneCodeIndex codeIndex;
+
+    @Inject
+    public LspCodeSearchService(LspClient lspClient, LuceneCodeIndex codeIndex) {
+        this.lspClient = lspClient;
+        this.codeIndex = codeIndex;
+    }
+
+    public List&lt;CodeSymbol&gt; search(String naturalLanguageQuery) {
+        // 1. 将自然语言转为代码符号查询
+        // 例如：&quot;用户登录&quot; → method:login, class:UserService
+        SymbolQuery symbolQuery = parseQuery(naturalLanguageQuery);
+
+        // 2. 在 Lucene 索引中搜索
+        List&lt;CodeSymbol&gt; candidates = codeIndex.search(symbolQuery);
+
+        // 3. 使用 LSP 获取详细上下文
+        for (CodeSymbol candidate : candidates) {
+            candidate.setReferences(lspClient.findReferences(candidate));
+            candidate.setCallers(lspClient.findCallers(candidate));
+        }
+
+        return candidates;
+    }
+
+    private SymbolQuery parseQuery(String naturalLanguage) {
+        // 使用 LLM 将自然语言转为符号查询
+        ChatResponse response = chatModel.prompt(naturalLanguage)
+                .system(&quot;你是代码搜索专家，将自然语言查询转为代码符号查询&quot;)
+                .call();
+        return SymbolQuery.fromJson(response.getMessage().getContent());
+    }
+}
+</code></pre>
+
+<p><strong>关键工程细节</strong>：
+- LSP 通信基于 JSON-RPC（stdio 或 TCP）
+- Lucene 索引构建时提取代码结构（类名/方法名/注释）</p>
+<h4 id="2-bot">练习2：自动代码审查 Bot</h4>
+<p><strong>目标</strong>：实现 Git Commit 触发的自动代码审查</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class CodeReviewBot {
+    private final DiffAnalyzer diffAnalyzer;
+    private final SecurityScanner securityScanner;
+    private final PerformanceAnalyzer performanceAnalyzer;
+    private final ChatModel chatModel;
+
+    @Inject
+    public CodeReviewBot(DiffAnalyzer diffAnalyzer,
+                        SecurityScanner securityScanner,
+                        PerformanceAnalyzer performanceAnalyzer,
+                        ChatModel chatModel) {
+        this.diffAnalyzer = diffAnalyzer;
+        this.securityScanner = securityScanner;
+        this.performanceAnalyzer = performanceAnalyzer;
+        this.chatModel = chatModel;
+    }
+
+    public ReviewResult review(GitCommit commit) {
+        // 1. 获取变更文件列表
+        List&lt;ChangedFile&gt; changedFiles = diffAnalyzer.getChangedFiles(commit);
+
+        List&lt;ReviewComment&gt; comments = new ArrayList&lt;&gt;();
+
+        for (ChangedFile file : changedFiles) {
+            // 2. 规则引擎审查（命名/格式）
+            comments.addAll(checkConventions(file));
+
+            // 3. 安全漏洞扫描
+            comments.addAll(securityScanner.scan(file));
+
+            // 4. 性能分析
+            comments.addAll(performanceAnalyzer.analyze(file));
+        }
+
+        // 5. LLM 深度审查（架构/设计）
+        ReviewSummary summary = llmReview(commit, comments);
+
+        return ReviewResult.builder()
+                .comments(comments)
+                .summary(summary)
+                .build();
+    }
+
+    private List&lt;ReviewComment&gt; checkConventions(ChangedFile file) {
+        // 检查命名规范、代码格式、注释完整性
+        List&lt;ReviewComment&gt; comments = new ArrayList&lt;&gt;();
+        // ... 规则实现
+        return comments;
+    }
+}
+</code></pre>
+
+<p><strong>关键工程细节</strong>：
+- 使用 JGit 解析 Git 变更
+- 规则引擎基于正则 + AST
+- LLM 审查需要传递完整 diff + 项目上下文</p>
+<h4 id="3">练习3：代码生成上下文管理</h4>
+<p><strong>目标</strong>：基于项目上下文生成代码</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class CodeGenerationContextManager {
+    private final LuceneCodeIndex codeIndex;
+    private final LspClient lspClient;
+
+    public GenerationContext buildContext(String prompt, String filePath) {
+        // 1. 提取当前文件的上下文
+        CodeFile currentFile = lspClient.getFile(filePath);
+
+        // 2. 检索相关代码片段
+        List&lt;CodeSymbol&gt; relatedSymbols = codeIndex.search(prompt);
+
+        // 3. 构建 Prompt
+        StringBuilder context = new StringBuilder();
+        context.append(&quot;项目上下文：\n&quot;);
+        context.append(&quot;当前文件：&quot;).append(filePath).append(&quot;\n&quot;);
+        context.append(&quot;当前包：&quot;).append(currentFile.getPackageName()).append(&quot;\n\n&quot;);
+
+        context.append(&quot;相关代码：\n&quot;);
+        for (CodeSymbol symbol : relatedSymbols) {
+            context.append(&quot;- &quot;).append(symbol.getQualifiedName())
+                   .append(&quot;: &quot;).append(symbol.getSnippet()).append(&quot;\n&quot;);
+        }
+
+        context.append(&quot;\n用户需求：&quot;).append(prompt);
+
+        return GenerationContext.builder()
+                .context(context.toString())
+                .relatedSymbols(relatedSymbols)
+                .currentFile(currentFile)
+                .build();
+    }
+}
+</code></pre>
+
+<h4 id="4">练习4：技术债务可视化</h4>
+<p><strong>目标</strong>：分析并可视化代码库的技术债务</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class TechDebtAnalyzer {
+    private final CodeIndex codeIndex;
+    private final ComplexityAnalyzer complexityAnalyzer;
+
+    public TechDebtReport analyze(String repoPath) {
+        // 1. 圈复杂度分析
+        Map&lt;String, Double&gt; complexityMap = complexityAnalyzer.analyze(repoPath);
+
+        // 2. 代码重复检测
+        List&lt;DuplicateBlock&gt; duplicates = detectDuplicates(repoPath);
+
+        // 3. 依赖老化分析
+        List&lt;Dependency&gt; outdatedDependencies = analyzeDependencies(repoPath);
+
+        // 4. 生成报告
+        return TechDebtReport.builder()
+                .totalLines(codeIndex.countLines())
+                .avgComplexity(complexityMap.values().stream().mapToDouble(d -&gt; d).average().orElse(0))
+                .highComplexityMethods(complexityMap.entrySet().stream()
+                        .filter(e -&gt; e.getValue() &gt; 20)
+                        .map(Map.Entry::getKey)
+                        .toList())
+                .duplicateBlocks(duplicates)
+                .outdatedDependencies(outdatedDependencies)
+                .build();
+    }
+}
+</code></pre>
+
+<h3 id="153">15.3 项目实战</h3>
+<h4 id="1531">15.3.1 项目需求</h4>
+<p><strong>功能需求</strong>：
+1. 代码语义检索（自然语言 → 代码片段）
+2. 自动代码审查（规范检查 + 安全漏洞 + 性能建议）
+3. 代码生成与补全（基于项目上下文）
+4. 技术债务分析（复杂度、重复代码、依赖老化）
+5. IDE 插件（JetBrains / VSCode）</p>
+<p><strong>非功能需求</strong>：
+- 支持 Java/Go/Python 三种语言
+- 代码审查准确率 &gt; 85%
+- 检索响应时间 &lt; 500ms
+- 支持 GitLab/GitHub 集成</p>
+<h4 id="1532">15.3.2 技术栈</h4>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>技术选型</th>
+<th>选型理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>框架</td>
+<td>Solon 4.1.1 + Solon-AI</td>
+<td>轻量、高性能、AI 原生</td>
+</tr>
+<tr>
+<td>代码分析</td>
+<td>JavaParser / go/ast / ast</td>
+<td>各语言原生解析器</td>
+</tr>
+<tr>
+<td>Git 操作</td>
+<td>JGit</td>
+<td>纯 Java 实现，无需 Git CLI</td>
+</tr>
+<tr>
+<td>全文检索</td>
+<td>Lucene</td>
+<td>本地部署、高性能</td>
+</tr>
+<tr>
+<td>LSP 通信</td>
+<td>LSP4J</td>
+<td>跨语言 LSP 客户端</td>
+</tr>
+<tr>
+<td>消息队列</td>
+<td>RabbitMQ</td>
+<td>Webhook 异步处理</td>
+</tr>
+<tr>
+<td>前端</td>
+<td>Vue 3 + Monaco Editor</td>
+<td>代码编辑器集成</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1533">15.3.3 核心代码</h4>
+<p><strong>模块1：代码索引服务</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class CodeIndexService {
+    private final LuceneCodeIndex codeIndex;
+    private final JGit gitClient;
+    private final EventPublisher eventPublisher;
+
+    // 全量索引
+    public void fullIndex(String repoPath) throws Exception {
+        long start = System.currentTimeMillis();
+
+        // 1. 遍历代码文件
+        List&lt;CodeFile&gt; files = scanCodeFiles(repoPath);
+
+        // 2. 解析 AST
+        List&lt;CodeSymbol&gt; symbols = new ArrayList&lt;&gt;();
+        for (CodeFile file : files) {
+            symbols.addAll(parseAst(file));
+        }
+
+        // 3. 建立 Lucene 索引
+        codeIndex.index(symbols);
+
+        long duration = System.currentTimeMillis() - start;
+        log.info(&quot;Full index completed: files={}, symbols={}, duration={}ms&quot;,
+            files.size(), symbols.size(), duration);
+    }
+
+    // 增量索引（基于 Git Webhook）
+    public void incrementalIndex(GitPushEvent event) {
+        // 1. 获取变更文件
+        List&lt;ChangedFile&gt; changedFiles = gitClient.getChangedFiles(event.getCommitId());
+
+        // 2. 只索引变更的文件
+        for (ChangedFile file : changedFiles) {
+            CodeFile codeFile = gitClient.getFile(event.getCommitId(), file.getPath());
+            List&lt;CodeSymbol&gt; symbols = parseAst(codeFile);
+            codeIndex.update(file.getPath(), symbols);
+        }
+
+        log.info(&quot;Incremental index completed: files={}&quot;, changedFiles.size());
+    }
+}
+</code></pre>
+
+<p><strong>模块2：代码审查 Agent</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class CodeReviewAgent {
+    private final DiffAnalyzer diffAnalyzer;
+    private final SecurityScanner securityScanner;
+    private final ChatModel chatModel;
+    private final NotificationService notificationService;
+
+    public ReviewResult review(GitPushEvent event) {
+        // 1. 获取变更
+        List&lt;ChangedFile&gt; changedFiles = diffAnalyzer.getChangedFiles(event);
+
+        List&lt;ReviewComment&gt; comments = new ArrayList&lt;&gt;();
+
+        for (ChangedFile file : changedFiles) {
+            // 2. 规则审查
+            comments.addAll(checkNaming(file));
+            comments.addAll(checkSecurity(file));
+            comments.addAll(checkPerformance(file));
+        }
+
+        // 3. LLM 深度审查
+        ReviewSummary summary = llmDeepReview(event, comments);
+
+        // 4. 发送通知（企业微信/钉钉）
+        notificationService.sendReviewResult(event.getAuthor(), summary);
+
+        return ReviewResult.builder()
+                .comments(comments)
+                .summary(summary)
+                .build();
+    }
+
+    private ReviewSummary llmDeepReview(GitPushEvent event, List&lt;ReviewComment&gt; comments) {
+        // 构造完整 diff 上下文
+        String diff = diffAnalyzer.getDiff(event);
+
+        ChatResponse response = chatModel.prompt(diff)
+                .system(&quot;你是资深代码审查专家，请审查以下代码变更，关注架构、设计、可维护性&quot;)
+                .call();
+
+        return ReviewSummary.fromJson(response.getMessage().getContent());
+    }
+}
+</code></pre>
+
+<p><strong>模块3：变更影响分析</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class ChangeImpactAnalyzer {
+    private final LspClient lspClient;
+    private final CallGraphBuilder callGraphBuilder;
+
+    public ImpactReport analyze(ChangedFile file) {
+        // 1. 获取变更的方法/类
+        List&lt;CodeSymbol&gt; changedSymbols = extractChangedSymbols(file);
+
+        // 2. 构建调用图
+        CallGraph callGraph = callGraphBuilder.build(file.getRepoPath());
+
+        // 3. 分析影响范围
+        Set&lt;CodeSymbol&gt; affectedSymbols = new HashSet&lt;&gt;();
+        for (CodeSymbol symbol : changedSymbols) {
+            affectedSymbols.addAll(callGraph.getCallers(symbol));
+            affectedSymbols.addAll(callGraph.getCallees(symbol));
+        }
+
+        // 4. 生成影响报告
+        return ImpactReport.builder()
+                .changedSymbols(changedSymbols)
+                .affectedSymbols(affectedSymbols)
+                .riskLevel(calculateRisk(affectedSymbols.size()))
+                .build();
+    }
+}
+</code></pre>
+
+<p><strong>模块4：IDE 插件通信（MCP）</strong></p>
+<pre class="codehilite"><code class="language-java">@McpServerEndpoint
+public class CodeIntelligenceMcpServer {
+
+    @ToolMapping(name = &quot;search_code&quot;, description = &quot;语义搜索代码&quot;)
+    public List&lt;CodeSymbol&gt; searchCode(String query, @Param(&quot;language&quot;) String language) {
+        return codeSearchService.search(query, language);
+    }
+
+    @ToolMapping(name = &quot;review_code&quot;, description = &quot;代码审查&quot;)
+    public ReviewResult reviewCode(@Param(&quot;diff&quot;) String diff) {
+        return codeReviewBot.review(diff);
+    }
+
+    @ToolMapping(name = &quot;generate_code&quot;, description = &quot;基于上下文生成代码&quot;)
+    public String generateCode(@Param(&quot;prompt&quot;) String prompt, @Param(&quot;context&quot;) String context) {
+        return codeGenerator.generate(prompt, context);
+    }
+}
+</code></pre>
+
+<p><strong>模块5：Webhook 监听与调度</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class GitWebhookController {
+    private final CodeIndexService indexService;
+    private final CodeReviewAgent reviewAgent;
+
+    @Post(&quot;/webhook/gitlab&quot;)
+    public Result handleGitLabPush(@Body GitPushEvent event) {
+        // 1. 验证签名
+        if (!verifySignature(event)) {
+            return Result.fail(&quot;Invalid signature&quot;);
+        }
+
+        // 2. 异步处理（避免 Webhook 超时）
+        eventPublisher.publish(event);
+
+        return Result.success(&quot;接受成功&quot;);
+    }
+
+    @Subscribe
+    public void onGitPush(GitPushEvent event) {
+        // 1. 增量索引
+        indexService.incrementalIndex(event);
+
+        // 2. 自动代码审查（仅针对 MR）
+        if (event.isMergeRequest()) {
+            reviewAgent.review(event);
+        }
+    }
+}
+</code></pre>
+
+<h4 id="1534">15.3.4 部署与运维</h4>
+<p><strong>增量索引调度（XXL-Job）</strong></p>
+<pre class="codehilite"><code class="language-java">@XxlJob(&quot;codeIndexJob&quot;)
+public void codeIndexJob() {
+    // 每日凌晨 2 点全量索引
+    indexService.fullIndex(&quot;/data/repos&quot;);
+}
+</code></pre>
+
+<p><strong>代码仓库 Webhook 配置</strong>：</p>
+<pre class="codehilite"><code class="language-yaml"># GitLab Webhook
+url: https://your-domain/webhook/gitlab
+secret_token: your-secret
+events:
+  - Push Hook
+  - Merge Request Hook
+</code></pre>
+
+<p><strong>审查结果通知（企业微信）</strong>：</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class WeComNotificationService implements NotificationService {
+    @Override
+    public void sendReviewResult(String userId, ReviewSummary summary) {
+        String message = String.format(
+            &quot;代码审查完成\n审查人：%s\n文件数：%d\n问题数：%d\n严重问题：%d&quot;,
+            summary.getReviewer(),
+            summary.getFileCount(),
+            summary.getCommentCount(),
+            summary.getCriticalCount()
+        );
+
+        // 调用企业微信机器人 Webhook
+        webhookClient.send(userId, message);
+    }
+}
+</code></pre>
+
+<p><strong>监控指标</strong>：
+1. 索引延迟（代码提交 → 可检索）
+2. 审查覆盖率（被审查代码行 / 总代码行）
+3. 审查响应时间（P95 &lt; 5s）
+4. 检索准确率（点击率 + 满意度）</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="14.html" class="nav-prev">← 第14章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

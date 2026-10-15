@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第17章 IoT/智能硬件监控与诊断平台 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" >第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" >第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" >第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" >第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" >第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" >第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" >第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" >第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" >第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" >第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="171">17.1 理论讲解</h3>
+<h4 id="1711-iot">17.1.1 IoT 监控的核心挑战</h4>
+<p><strong>行业痛点</strong>：
+1. <strong>设备规模大</strong>：万级设备并发上报，数据量巨大
+2. <strong>实时性要求高</strong>：告警延迟需要秒级甚至毫秒级
+3. <strong>协议碎片化</strong>：MQTT/CoAP/Modbus/HTTP 多种协议
+4. <strong>故障诊断难</strong>：设备分散，远程调试困难
+5. <strong>数据存储成本高</strong>：时序数据长期存储成本高</p>
+<p><strong>AI 赋能 IoT 监控的三个层次</strong>：
+1. <strong>辅助层</strong>：智能告警（减少误报）、故障预测
+2. <strong>智能层</strong>：根因分析、自动诊断
+3. <strong>决策层</strong>：预防性维护、设备健康评分</p>
+<h4 id="1712">17.1.2 核心技术</h4>
+<p><strong>1. 时序数据处理</strong></p>
+<ul>
+<li>时间序列数据库（InfluxDB/TDEngine/Prometheus）</li>
+<li>降采样（Downsampling）策略</li>
+<li>数据保留策略（热数据/温数据/冷数据）</li>
+</ul>
+<p><strong>2. 异常检测</strong></p>
+<ul>
+<li>统计方法（3-sigma、Z-score）</li>
+<li>机器学习方法（Isolation Forest、LSTM-Autoencoder）</li>
+<li>LLM 辅助分析（结合领域知识）</li>
+</ul>
+<p><strong>3. 故障预测</strong></p>
+<ul>
+<li>基于时序预测（Prophet、ARIMA）</li>
+<li>基于设备健康指标（振动、温度、功耗）</li>
+<li>基于历史故障模式</li>
+</ul>
+<p><strong>4. 远程诊断</strong></p>
+<ul>
+<li>MCP 协议调用设备 API</li>
+<li>Agent 自动执行诊断流程</li>
+<li>生成诊断报告</li>
+</ul>
+<h4 id="1713">17.1.3 系统架构设计</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│          设备层 (IoT Devices)            │
+│  ESP32 │ 传感器 │ 机器人 │ 网关          │
+└─────────────────────────────────────────┘
+                    ↓ MQTT/CoAP
+┌─────────────────────────────────────────┐
+│       接入层 (EMQX / ThingsBoard)        │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│      Solon-AI 智能监控平台               │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Time     │  │  Agent   │             │
+│  │ Series   │  │ Diagnose │             │
+│  │  Store   │  │          │             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Anomaly  │  │  Alert   │             │
+│  │ Detector │  │  Engine  │             │
+│  └──────────┘  └──────────┘             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           数据层                         │
+│  TDEngine │ Redis │ ES │ PostgreSQL     │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="1714">17.1.4 关键技术决策</h4>
+<p><strong>Q1：时序数据库选型</strong></p>
+<table>
+<thead>
+<tr>
+<th>数据库</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>InfluxDB</td>
+<td>中小规模</td>
+<td>易用、生态好</td>
+<td>集群版收费</td>
+</tr>
+<tr>
+<td>TDEngine</td>
+<td>大规模时序</td>
+<td>高性能、开源</td>
+<td>学习成本</td>
+</tr>
+<tr>
+<td>Prometheus</td>
+<td>监控指标</td>
+<td>生态完善</td>
+<td>不适合设备数据</td>
+</tr>
+<tr>
+<td>TimescaleDB</td>
+<td>PostgreSQL 扩展</td>
+<td>兼容 SQL</td>
+<td>依赖 PG</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：TDEngine（开源、高性能、适合设备规模大场景）</p>
+<p><strong>Q2：异常检测算法选择</strong></p>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3-sigma</td>
+<td>单指标、正态分布</td>
+<td>简单快速</td>
+<td>无法处理多指标</td>
+</tr>
+<tr>
+<td>Isolation Forest</td>
+<td>多指标、异常稀少</td>
+<td>无需标注</td>
+<td>可解释性差</td>
+</tr>
+<tr>
+<td>LSTM-Autoencoder</td>
+<td>时序模式</td>
+<td>捕捉时序依赖</td>
+<td>训练成本高</td>
+</tr>
+<tr>
+<td>LLM 辅助</td>
+<td>复杂故障</td>
+<td>结合领域知识</td>
+<td>成本高</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：3-sigma 做实时过滤，Isolation Forest 做批量检测，LLM 做根因分析</p>
+<p><strong>Q3：告警降噪策略</strong></p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>时间窗口</td>
+<td>5 分钟内相同告警合并</td>
+</tr>
+<tr>
+<td>依赖关系</td>
+<td>上游告警触发下游告警抑制</td>
+</tr>
+<tr>
+<td>历史基线</td>
+<td>与历史同期对比，排除周期性波动</td>
+</tr>
+<tr>
+<td>LLM 分析</td>
+<td>结合多指标判断是否为真实故障</td>
+</tr>
+</tbody>
+</table>
+<h3 id="172">17.2 实践练习</h3>
+<h4 id="1mqtt">练习1：MQTT 遥测数据接入</h4>
+<p><strong>目标</strong>：使用 EMQX 接收设备数据并存储到时序数据库</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class MqttTelemetryService {
+    private final TdEngineClient tdEngineClient;
+    private final DeviceRepository deviceRepository;
+
+    @MqttSubscribe(&quot;device/+/telemetry&quot;)
+    public void onTelemetry(String topic, TelemetryData data) {
+        // 1. 提取设备 ID
+        String deviceId = extractDeviceId(topic);
+
+        // 2. 验证设备
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -&gt; new DeviceNotFoundException(deviceId));
+
+        // 3. 存储到时序数据库
+        tdEngineClient.insert(&quot;telemetry&quot;, new TelemetryRecord(
+            deviceId,
+            data.getTimestamp(),
+            data.getTemperature(),
+            data.getHumidity(),
+            data.getVoltage(),
+            data.getCurrent()
+        ));
+
+        // 4. 实时检测异常
+        checkAnomaly(device, data);
+    }
+}
+</code></pre>
+
+<h4 id="2">练习2：基于规则的实时异常检测</h4>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class RuleBasedAnomalyDetector {
+    private final AlertService alertService;
+
+    public void checkAnomaly(Device device, TelemetryData data) {
+        List&lt;Anomaly&gt; anomalies = new ArrayList&lt;&gt;();
+
+        // 1. 温度异常（&gt; 80°C）
+        if (data.getTemperature() &gt; 80) {
+            anomalies.add(new Anomaly(&quot;TEMPERATURE_HIGH&quot;, 
+                String.format(&quot;温度过高: %.1f°C&quot;, data.getTemperature())));
+        }
+
+        // 2. 电压异常（&lt; 3.0V 或 &gt; 4.2V）
+        if (data.getVoltage() &lt; 3.0 || data.getVoltage() &gt; 4.2) {
+            anomalies.add(new Anomaly(&quot;VOLTAGE_OUT_OF_RANGE&quot;,
+                String.format(&quot;电压异常: %.2fV&quot;, data.getVoltage())));
+        }
+
+        // 3. 电流异常（&gt; 5A）
+        if (data.getCurrent() &gt; 5.0) {
+            anomalies.add(new Anomaly(&quot;CURRENT_HIGH&quot;,
+                String.format(&quot;电流过高: %.2fA&quot;, data.getCurrent())));
+        }
+
+        // 4. 发送告警
+        for (Anomaly anomaly : anomalies) {
+            alertService.send(device.getId(), anomaly);
+        }
+    }
+}
+</code></pre>
+
+<h4 id="33-sigma">练习3：时序数据异常检测（3-sigma）</h4>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class TimeSeriesAnomalyDetector {
+    private final TdEngineClient tdEngineClient;
+
+    public boolean isAnomaly(String deviceId, String metric, long timestamp) {
+        // 1. 获取历史数据（最近 24 小时）
+        List&lt;Double&gt; history = tdEngineClient.query(deviceId, metric, 
+            timestamp - 24 * 3600 * 1000, timestamp);
+
+        if (history.size() &lt; 10) {
+            return false; // 数据不足
+        }
+
+        // 2. 计算均值和标准差
+        double mean = history.stream().mapToDouble(d -&gt; d).average().orElse(0);
+        double stdDev = Math.sqrt(history.stream()
+                .mapToDouble(d -&gt; Math.pow(d - mean, 2))
+                .average().orElse(0));
+
+        // 3. 获取最新值
+        double latest = history.get(history.size() - 1);
+
+        // 4. 3-sigma 判断
+        return Math.abs(latest - mean) &gt; 3 * stdDev;
+    }
+}
+</code></pre>
+
+<h4 id="4agent">练习4：Agent 远程诊断流程</h4>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class DeviceDiagnosisAgent {
+    private final McpClientProvider mcpClient;
+    private final ChatModel chatModel;
+
+    public DiagnosisResult diagnose(String deviceId, String symptom) {
+        // 1. 获取设备信息
+        Device device = deviceRepository.findById(deviceId).orElseThrow();
+
+        // 2. 获取最近 1 小时遥测数据
+        TelemetryData recentData = getRecentTelemetry(deviceId);
+
+        // 3. 构造诊断 Prompt
+        String prompt = String.format(&quot;&quot;&quot;
+            设备信息：
+            - 型号：%s
+            - 固件版本：%s
+            - 部署位置：%s
+
+            最近遥测数据：
+            - 温度：%.1f°C
+            - 湿度：%.1f%%
+            - 电压：%.2fV
+            - 电流：%.2fA
+
+            故障现象：%s
+
+            请诊断可能的原因并提供解决方案。
+            &quot;&quot;&quot;, device.getModel(), device.getFirmwareVersion(),
+            device.getLocation(), recentData.getTemperature(),
+            recentData.getHumidity(), recentData.getVoltage(),
+            recentData.getCurrent(), symptom);
+
+        // 4. 调用 LLM 诊断
+        ChatResponse response = chatModel.prompt(prompt)
+                .system(&quot;你是设备诊断专家，请根据遥测数据诊断故障原因&quot;)
+                .call();
+
+        return DiagnosisResult.builder()
+                .deviceId(deviceId)
+                .diagnosis(response.getMessage().getContent())
+                .symptom(symptom)
+                .telemetry(recentData)
+                .build();
+    }
+}
+</code></pre>
+
+<h3 id="173">17.3 项目实战</h3>
+<h4 id="1731">17.3.1 项目需求</h4>
+<p><strong>功能需求</strong>：
+1. 多协议设备接入（MQTT/CoAP/HTTP）
+2. 实时遥测数据采集与存储
+3. 实时异常检测与智能告警
+4. 历史数据查询与分析
+5. Agent 远程诊断</p>
+<p><strong>非功能需求</strong>：
+- 支持 10,000+ 设备并发接入
+- 数据上报延迟 &lt; 1s
+- 告警响应时间 &lt; 5s
+- 时序数据保留 2 年</p>
+<h4 id="1732">17.3.2 技术栈</h4>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>技术选型</th>
+<th>选型理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>接入层</td>
+<td>EMQX</td>
+<td>高并发 MQTT Broker</td>
+</tr>
+<tr>
+<td>时序数据库</td>
+<td>TDEngine</td>
+<td>开源、高性能</td>
+</tr>
+<tr>
+<td>规则引擎</td>
+<td>Solon-AI Flow</td>
+<td>低代码规则配置</td>
+</tr>
+<tr>
+<td>消息队列</td>
+<td>RabbitMQ</td>
+<td>告警异步处理</td>
+</tr>
+<tr>
+<td>AI 引擎</td>
+<td>Solon-AI Agent</td>
+<td>故障诊断 Agent</td>
+</tr>
+<tr>
+<td>前端</td>
+<td>Vue 3 + ECharts</td>
+<td>实时监控大屏</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1733">17.3.3 核心代码</h4>
+<p><strong>模块1：设备接入服务</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class DeviceIngestionService {
+    private final TdEngineClient tdEngineClient;
+    private final DeviceRepository deviceRepository;
+    private final AnomalyDetector anomalyDetector;
+
+    @MqttSubscribe(&quot;device/+/telemetry&quot;)
+    public void onTelemetry(String topic, TelemetryData data) {
+        String deviceId = extractDeviceId(topic);
+
+        // 1. 验证设备
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -&gt; new DeviceNotFoundException(deviceId));
+
+        // 2. 存储时序数据
+        tdEngineClient.insert(&quot;telemetry&quot;, new TelemetryRecord(deviceId, data));
+
+        // 3. 实时异常检测
+        List&lt;Anomaly&gt; anomalies = anomalyDetector.detect(device, data);
+        if (!anomalies.isEmpty()) {
+            alertService.send(device, anomalies);
+        }
+
+        // 4. 更新设备状态
+        device.setLastSeen(System.currentTimeMillis());
+        deviceRepository.update(device);
+    }
+}
+</code></pre>
+
+<p><strong>模块2：时序数据查询服务</strong></p>
+<pre class="codehilite"><code class="language-java">@RestController
+@RequestMapping(&quot;/api/telemetry&quot;)
+public class TelemetryController {
+    private final TdEngineClient tdEngineClient;
+
+    @Get(&quot;/{deviceId}&quot;)
+    public TimeSeriesData query(
+            @Path String deviceId,
+            @Param(&quot;metric&quot;) String metric,
+            @Param(&quot;start&quot;) long start,
+            @Param(&quot;end&quot;) long end,
+            @Param(&quot;interval&quot;) String interval) {
+
+        // 1. 查询原始数据
+        List&lt;TelemetryPoint&gt; points = tdEngineClient.query(
+            deviceId, metric, start, end, interval
+        );
+
+        // 2. 降采样（如果查询范围过大）
+        if (points.size() &gt; 1000) {
+            points = downsample(points, 1000);
+        }
+
+        return TimeSeriesData.builder()
+                .deviceId(deviceId)
+                .metric(metric)
+                .points(points)
+                .build();
+    }
+}
+</code></pre>
+
+<p><strong>模块3：Agent 远程诊断</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class DeviceDiagnosisAgent {
+    private final McpClientProvider mcpClient;
+    private final ChatModel chatModel;
+    private final DeviceRepository deviceRepository;
+
+    public DiagnosisResult diagnose(String deviceId, String symptom) {
+        // 1. 获取设备信息
+        Device device = deviceRepository.findById(deviceId).orElseThrow();
+
+        // 2. 通过 MCP 获取设备实时数据
+        McpClient client = mcpClient.create(&quot;device-&quot; + deviceId);
+        Map&lt;String, Object&gt; telemetry = client.callTool(&quot;get_telemetry&quot;, Map.of(
+            &quot;device_id&quot;, deviceId,
+            &quot;duration&quot;, &quot;1h&quot;
+        ));
+
+        // 3. 构造诊断 Prompt
+        String prompt = buildDiagnosisPrompt(device, telemetry, symptom);
+
+        // 4. 调用 LLM 诊断
+        ChatResponse response = chatModel.prompt(prompt)
+                .system(&quot;你是设备诊断专家，请根据遥测数据诊断故障原因&quot;)
+                .call();
+
+        // 5. 生成诊断报告
+        return DiagnosisResult.builder()
+                .deviceId(deviceId)
+                .diagnosis(response.getMessage().getContent())
+                .symptom(symptom)
+                .telemetry(telemetry)
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
+}
+</code></pre>
+
+<p><strong>模块4：智能告警引擎</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SmartAlertEngine {
+    private final AlertRepository alertRepository;
+    private final NotificationService notificationService;
+
+    public void process(Anomaly anomaly) {
+        // 1. 去重（相同设备、相同类型、5分钟内）
+        Alert recentAlert = alertRepository.findRecent(anomaly.getDeviceId(), 
+            anomaly.getType(), System.currentTimeMillis() - 5 * 60 * 1000);
+        if (recentAlert != null) {
+            return; // 抑制重复告警
+        }
+
+        // 2. 关联分析（检查依赖设备）
+        boolean isCascade = checkCascadeFailure(anomaly);
+
+        // 3. 生成告警
+        Alert alert = Alert.builder()
+                .deviceId(anomaly.getDeviceId())
+                .type(anomaly.getType())
+                .severity(isCascade ? AlertSeverity.CRITICAL : AlertSeverity.WARNING)
+                .message(anomaly.getMessage())
+                .timestamp(System.currentTimeMillis())
+                .build();
+
+        alertRepository.save(alert);
+
+        // 4. 发送通知
+        notificationService.send(alert);
+    }
+
+    private boolean checkCascadeFailure(Anomaly anomaly) {
+        // 检查是否因上游设备故障导致
+        Device device = deviceRepository.findById(anomaly.getDeviceId()).orElseThrow();
+        if (device.getDependsOn() != null) {
+            Alert upstreamAlert = alertRepository.findRecent(device.getDependsOn(),
+                AlertType.OFFLINE, System.currentTimeMillis() - 10 * 60 * 1000);
+            return upstreamAlert != null;
+        }
+        return false;
+    }
+}
+</code></pre>
+
+<p><strong>模块5：监控大屏</strong></p>
+<pre class="codehilite"><code class="language-java">@RestController
+@RequestMapping(&quot;/api/dashboard&quot;)
+public class DashboardController {
+    private final TdEngineClient tdEngineClient;
+    private final DeviceRepository deviceRepository;
+
+    @Get(&quot;/overview&quot;)
+    public DashboardOverview getOverview() {
+        // 1. 设备总数
+        long totalDevices = deviceRepository.count();
+
+        // 2. 在线设备数
+        long onlineDevices = deviceRepository.countOnline();
+
+        // 3. 今日告警数
+        long todayAlerts = alertRepository.countToday();
+
+        // 4. 关键指标趋势
+        List&lt;TimeSeriesPoint&gt; cpuTrend = tdEngineClient.queryAggregate(
+            &quot;cpu_usage&quot;, &quot;1h&quot;, &quot;AVG&quot;
+        );
+
+        return DashboardOverview.builder()
+                .totalDevices(totalDevices)
+                .onlineDevices(onlineDevices)
+                .todayAlerts(todayAlerts)
+                .cpuTrend(cpuTrend)
+                .build();
+    }
+}
+</code></pre>
+
+<h4 id="1734">17.3.4 部署与运维</h4>
+<p><strong>EMQX + TDEngine 部署</strong></p>
+<pre class="codehilite"><code class="language-yaml">version: '3.8'
+services:
+  emqx:
+    image: emqx/emqx:5.4
+    ports:
+      - &quot;1883:1883&quot;
+      - &quot;8083:8083&quot;
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=127.0.0.1
+
+  tdengine:
+    image: tdengine/tdengine:3.0
+    environment:
+      - TDENGINE_USER=root
+      - TDENGINE_PASS=taosdata
+    volumes:
+      - tdenginedata:/var/lib/taos
+
+  app:
+    image: your-company/iot-monitor:latest
+    ports:
+      - &quot;8080:8080&quot;
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pg:5432/iot_db
+      - TDENGINE_URL=jdbc:TC:thin://tdengine:0/root
+    depends_on:
+      - emqx
+      - tdengine
+      - pg
+</code></pre>
+
+<p><strong>监控指标</strong>：
+1. 设备在线率
+2. 数据上报延迟（P95 &lt; 1s）
+3. 告警准确率（&gt; 90%）
+4. 告警响应时间（P95 &lt; 5s）</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="16.html" class="nav-prev">← 第16章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

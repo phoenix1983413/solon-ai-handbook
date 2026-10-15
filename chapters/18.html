@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第18章 GIS空间数据智能分析平台 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" >第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" >第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" >第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" >第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" >第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" >第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" >第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" >第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" >第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" >第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="181">18.1 理论讲解</h3>
+<h4 id="1811-gis">18.1.1 GIS 空间智能的价值</h4>
+<p><strong>行业痛点</strong>：
+1. <strong>空间数据孤岛</strong>：地图数据、POI 数据、遥感数据分散在不同系统
+2. <strong>查询门槛高</strong>：需要学习 GIS 专业知识（空间关系、坐标系转换）
+3. <strong>分析深度有限</strong>：传统 GIS 工具侧重于可视化，缺乏智能分析
+4. <strong>多模态融合难</strong>：视频 + 空间 + 文本难以统一分析</p>
+<p><strong>AI 赋能 GIS 的三个层次</strong>：
+1. <strong>辅助层</strong>：自然语言查询空间数据（"查找所有靠近水源的监控点"）
+2. <strong>智能层</strong>：空间关系推理、路径规划、选址分析
+3. <strong>决策层</strong>：区域态势评估、资源调度优化</p>
+<h4 id="1812">18.1.2 核心技术</h4>
+<p><strong>1. 空间数据索引</strong></p>
+<ul>
+<li>R-tree / Quad-tree 空间索引</li>
+<li>GeoHash / S2 Geometry 空间编码</li>
+<li>距离计算（欧氏距离、曼哈顿距离、球面距离）</li>
+</ul>
+<p><strong>2. 空间语义检索</strong></p>
+<ul>
+<li>结合文本描述 + 空间位置</li>
+<li>例如："朝阳区附近的咖啡店" → 文本匹配 "咖啡店" + 空间范围 "朝阳区"</li>
+</ul>
+<p><strong>3. 空间关系推理</strong></p>
+<ul>
+<li>包含（Contains）、相交（Intersects）、相邻（Adjacent）</li>
+<li>基于 LLM 的空间关系理解</li>
+</ul>
+<p><strong>4. 多模态融合</strong></p>
+<ul>
+<li>视频帧 + 空间坐标 + 文本描述</li>
+<li>遥感图像 + 地面传感器数据</li>
+</ul>
+<h4 id="1813">18.1.3 系统架构设计</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│         前端层 (Cesium + Vue)            │
+│  3D 地球 │ 空间标注 │ 轨迹回放           │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│      Solon-AI 空间智能平台               │
+│  ┌──────────┐  ┌──────────┐             │
+│  │ Spatial  │  │  Agent   │             │
+│  │  Index   │  │  Reason  │             │
+│  │ (R-tree) │  │          │             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────┐  ┌──────────┐             │
+│  │  Geo     │  │  Multi   │             │
+│  │  Search  │  │  Modal   │             │
+│  │          │  │  Fusion  │             │
+│  └──────────┘  └──────────┘             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           数据层                         │
+│  PostgreSQL + PostGIS │ Redis │ ES      │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="1814">18.1.4 关键技术决策</h4>
+<p><strong>Q1：空间数据库选型</strong></p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PostGIS</td>
+<td>功能完善、生态好</td>
+<td>性能一般</td>
+<td>中小规模</td>
+</tr>
+<tr>
+<td>MongoDB + GeoJSON</td>
+<td>灵活、易用</td>
+<td>空间索引弱</td>
+<td>原型开发</td>
+</tr>
+<tr>
+<td>Elasticsearch</td>
+<td>全文 + 空间结合</td>
+<td>复杂查询弱</td>
+<td>搜索场景</td>
+</tr>
+<tr>
+<td>GeoMesa</td>
+<td>分布式、大规模</td>
+<td>学习成本高</td>
+<td>大规模时空数据</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：PostGIS（功能完善，适合大多数场景）</p>
+<p><strong>Q2：前端地图引擎选型</strong></p>
+<table>
+<thead>
+<tr>
+<th>引擎</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cesium</td>
+<td>3D 能力、开源</td>
+<td>学习成本高</td>
+<td>三维可视化</td>
+</tr>
+<tr>
+<td>Mapbox GL JS</td>
+<td>性能好、样式美</td>
+<td>商业授权</td>
+<td>二维地图</td>
+</tr>
+<tr>
+<td>高德/百度地图 API</td>
+<td>国内数据全</td>
+<td>依赖第三方</td>
+<td>国内应用</td>
+</tr>
+<tr>
+<td>天地图</td>
+<td>国产、合规</td>
+<td>功能有限</td>
+<td>信创项目</td>
+</tr>
+</tbody>
+</table>
+<p><strong>推荐</strong>：Cesium（3D 能力 + 开源，适合复杂场景）</p>
+<p><strong>Q3：空间数据存储策略</strong></p>
+<table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>存储方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>矢量数据（POI/行政区）</td>
+<td>PostGIS</td>
+</tr>
+<tr>
+<td>栅格数据（遥感影像）</td>
+<td>COG + CDN</td>
+</tr>
+<tr>
+<td>轨迹数据</td>
+<td>TDEngine（时序） + PostGIS</td>
+</tr>
+<tr>
+<td>实时位置</td>
+<td>Redis Geo</td>
+</tr>
+</tbody>
+</table>
+<h3 id="182">18.2 实践练习</h3>
+<h4 id="1-crud">练习1：空间数据 CRUD</h4>
+<p><strong>目标</strong>：使用 PostGIS 管理空间数据</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SpatialDataService {
+    private final SpatialRepository repository;
+
+    public void createPointOfInterest(String name, double lng, double lat, String category) {
+        // 1. 构造空间对象
+        Geometry point = GeometryFactory.createPoint(lng, lat);
+
+        // 2. 创建 POI
+        POI poi = new POI();
+        poi.setName(name);
+        poi.setCategory(category);
+        poi.setLocation(point);
+        poi.setCreatedAt(System.currentTimeMillis());
+
+        // 3. 存储（PostGIS 自动建立空间索引）
+        repository.save(poi);
+    }
+
+    public List&lt;POI&gt; searchWithin(String wktPolygon) {
+        // 1. 解析多边形
+        Geometry polygon = WKTReader.read(wktPolygon);
+
+        // 2. 空间查询（使用 R-tree 索引）
+        return repository.findWithin(polygon);
+    }
+}
+</code></pre>
+
+<h4 id="2">练习2：空间语义检索</h4>
+<p><strong>目标</strong>：结合文本 + 空间位置进行检索</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SpatialSemanticSearch {
+    private final SpatialRepository spatialRepo;
+    private final ElasticsearchClient esClient;
+    private final EmbeddingModel embeddingModel;
+
+    public List&lt;POI&gt; search(String query, BoundingBox bbox) {
+        // 1. 文本语义检索
+        Embedding queryEmbedding = embeddingModel.embed(query);
+        List&lt;POI&gt; textResults = esClient.search(query, bbox);
+
+        // 2. 空间范围过滤
+        List&lt;POI&gt; spatialResults = spatialRepo.findWithin(bbox.toPolygon());
+
+        // 3. 融合排序
+        return mergeResults(textResults, spatialResults);
+    }
+}
+</code></pre>
+
+<h4 id="3-agent">练习3：空间 Agent 路径规划</h4>
+<p><strong>目标</strong>：使用 Agent 实现智能路径规划</p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SpatialAgent {
+    private final McpClientProvider mcpClient;
+    private final ChatModel chatModel;
+
+    public RoutePlanResult planRoute(String start, String end, List&lt;String&gt; waypoints) {
+        // 1. 构造 Prompt
+        String prompt = String.format(&quot;&quot;&quot;
+            规划从 %s 到 %s 的路径，途经点：%s
+
+            约束条件：
+            - 避开拥堵路段
+            - 避开限行区域
+            - 优先选择充电桩多的路线（如果是电动车）
+            &quot;&quot;&quot;, start, end, String.join(&quot;, &quot;, waypoints));
+
+        // 2. 调用 LLM 生成路径规划请求
+        ChatResponse response = chatModel.prompt(prompt)
+                .system(&quot;你是路径规划专家&quot;)
+                .call();
+
+        // 3. 调用地图 API（通过 MCP）
+        McpClient mapClient = mcpClient.create(&quot;map-service&quot;);
+        Map&lt;String, Object&gt; route = mapClient.callTool(&quot;plan_route&quot;, Map.of(
+            &quot;start&quot;, start,
+            &quot;end&quot;, end,
+            &quot;waypoints&quot;, waypoints
+        ));
+
+        return RoutePlanResult.fromMap(route);
+    }
+}
+</code></pre>
+
+<h4 id="4">练习4：空间数据可视化</h4>
+<p><strong>目标</strong>：使用 Cesium 渲染空间数据</p>
+<pre class="codehilite"><code class="language-java">@RestController
+@RequestMapping(&quot;/api/spatial&quot;)
+public class SpatialDataController {
+    private final SpatialRepository repository;
+
+    @Get(&quot;/pois&quot;)
+    public GeoJsonFeatureCollection getPOIs(
+            @Param(&quot;bbox&quot;) String bbox,
+            @Param(&quot;category&quot;) String category) {
+
+        // 1. 查询 POI
+        List&lt;POI&gt; pois = repository.findByBboxAndCategory(bbox, category);
+
+        // 2. 转换为 GeoJSON
+        return GeoJsonFeatureCollection.from(pois);
+    }
+}
+</code></pre>
+
+<p><strong>前端 Cesium 代码</strong>：</p>
+<pre class="codehilite"><code class="language-javascript">// 加载 GeoJSON 数据
+const dataSource = new Cesium.GeoJsonDataSource('pois');
+await dataSource.load('/api/spatial/pois?bbox=...');
+viewer.dataSources.add(dataSource);
+
+// 样式化
+dataSource.entities.addFromGeoJson(dataSource.entities.values, {
+  point: {
+    pixelSize: 10,
+    color: Cesium.Color.YELLOW
+  }
+});
+</code></pre>
+
+<h3 id="183">18.3 项目实战</h3>
+<h4 id="1831">18.3.1 项目需求</h4>
+<p><strong>功能需求</strong>：
+1. 空间数据管理（POI/行政区/建筑轮廓）
+2. 自然语言空间查询
+3. 路径规划与导航
+4. 区域态势分析
+5. 多模态融合（视频 + 空间 + 文本）</p>
+<p><strong>非功能需求</strong>：
+- 支持 100 万+ POI 数据
+- 空间查询响应时间 &lt; 500ms
+- 支持 1000+ 并发用户
+- 支持国测局坐标系统（GCJ-02）</p>
+<h4 id="1832">18.3.2 技术栈</h4>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>技术选型</th>
+<th>选型理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>空间数据库</td>
+<td>PostgreSQL + PostGIS</td>
+<td>功能完善、生态好</td>
+</tr>
+<tr>
+<td>地图引擎</td>
+<td>Cesium</td>
+<td>3D 能力、开源</td>
+</tr>
+<tr>
+<td>前端框架</td>
+<td>Vue 3 + Element Plus</td>
+<td>快速开发</td>
+</tr>
+<tr>
+<td>AI 引擎</td>
+<td>Solon-AI Agent + RAG</td>
+<td>空间语义理解</td>
+</tr>
+<tr>
+<td>缓存</td>
+<td>Redis Geo</td>
+<td>实时位置缓存</td>
+</tr>
+<tr>
+<td>消息队列</td>
+<td>RabbitMQ</td>
+<td>异步处理</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1833">18.3.3 核心代码</h4>
+<p><strong>模块1：空间数据管理服务</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SpatialDataService {
+    private final SpatialRepository repository;
+    private final FileStorage fileStorage;
+
+    public void importShapefile(MultipartFile file) throws Exception {
+        // 1. 解析 Shapefile
+        ShapefileReader reader = new ShapefileReader(file.getInputStream());
+        List&lt;Feature&gt; features = reader.readAll();
+
+        // 2. 转换为 PostGIS 格式
+        List&lt;SpatialEntity&gt; entities = features.stream()
+                .map(feature -&gt; SpatialEntity.builder()
+                        .name(feature.getString(&quot;name&quot;))
+                        .category(feature.getString(&quot;category&quot;))
+                        .geometry(feature.getGeometry())
+                        .properties(feature.getAttributes())
+                        .build())
+                .toList();
+
+        // 3. 批量导入
+        repository.batchSave(entities);
+    }
+
+    public List&lt;SpatialEntity&gt; spatialQuery(String wkt, String operation) {
+        Geometry geometry = WKTReader.read(wkt);
+
+        return switch (operation) {
+            case &quot;within&quot; -&gt; repository.findWithin(geometry);
+            case &quot;intersects&quot; -&gt; repository.findIntersects(geometry);
+            case &quot;contains&quot; -&gt; repository.findContains(geometry);
+            case &quot;nearby&quot; -&gt; repository.findNearby(geometry, 1000); // 1km
+            default -&gt; throw new IllegalArgumentException(&quot;Unsupported operation: &quot; + operation);
+        };
+    }
+}
+</code></pre>
+
+<p><strong>模块2：空间语义检索</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SpatialSemanticSearchEngine {
+    private final SpatialRepository spatialRepo;
+    private final ElasticsearchClient esClient;
+    private final EmbeddingModel embeddingModel;
+
+    public List&lt;ScoredSpatialEntity&gt; search(String query, BoundingBox bbox) {
+        // 1. 文本语义检索
+        Embedding queryEmbedding = embeddingModel.embed(query);
+        List&lt;ScoredSpatialEntity&gt; textResults = esClient.search(query, bbox);
+
+        // 2. 空间范围过滤
+        List&lt;SpatialEntity&gt; spatialResults = spatialRepo.findWithin(bbox.toPolygon());
+
+        // 3. 融合排序
+        return mergeResults(textResults, spatialResults);
+    }
+}
+</code></pre>
+
+<p><strong>模块3：Agent 空间分析</strong></p>
+<pre class="codehilite"><code class="language-java">@Singleton
+public class SpatialAnalysisAgent {
+    private final McpClientProvider mcpClient;
+    private final ChatModel chatModel;
+
+    public SpatialAnalysisResult analyze(String query) {
+        // 1. 解析用户意图
+        Intent intent = parseIntent(query);
+
+        // 2. 调用空间分析工具
+        McpClient spatialClient = mcpClient.create(&quot;spatial-service&quot;);
+
+        Map&lt;String, Object&gt; analysisResult = switch (intent.getType()) {
+            case &quot;DISTRIBUTION&quot; -&gt; spatialClient.callTool(&quot;analyze_distribution&quot;, 
+                Map.of(&quot;area&quot;, intent.getArea(), &quot;category&quot;, intent.getCategory()));
+            case &quot;DENSITY&quot; -&gt; spatialClient.callTool(&quot;analyze_density&quot;,
+                Map.of(&quot;area&quot;, intent.getArea(), &quot;metric&quot;, intent.getMetric()));
+            case &quot;TREND&quot; -&gt; spatialClient.callTool(&quot;analyze_trend&quot;,
+                Map.of(&quot;timeRange&quot;, intent.getTimeRange()));
+            default -&gt; throw new UnsupportedIntentException(intent.getType());
+        };
+
+        // 3. 生成自然语言报告
+        String report = generateReport(analysisResult, query);
+
+        return SpatialAnalysisResult.builder()
+                .result(analysisResult)
+                .report(report)
+                .build();
+    }
+
+    private Intent parseIntent(String query) {
+        ChatResponse response = chatModel.prompt(query)
+                .system(&quot;你是空间分析专家，解析用户的空间分析意图&quot;)
+                .call();
+        return Intent.fromJson(response.getMessage().getContent());
+    }
+}
+</code></pre>
+
+<p><strong>模块4：空间数据 API</strong></p>
+<pre class="codehilite"><code class="language-java">@RestController
+@RequestMapping(&quot;/api/spatial&quot;)
+public class SpatialDataController {
+    private final SpatialDataService spatialDataService;
+
+    @Get(&quot;/query&quot;)
+    public List&lt;SpatialEntity&gt; query(
+            @Param(&quot;wkt&quot;) String wkt,
+            @Param(&quot;operation&quot;) String operation,
+            @Param(&quot;category&quot;) String category) {
+
+        return spatialDataService.spatialQuery(wkt, operation);
+    }
+
+    @Get(&quot;/search&quot;)
+    public List&lt;ScoredSpatialEntity&gt; semanticSearch(
+            @Param(&quot;q&quot;) String query,
+            @Param(&quot;bbox&quot;) String bbox) {
+
+        return spatialSemanticSearchEngine.search(query, BoundingBox.from(bbox));
+    }
+
+    @Post(&quot;/import&quot;)
+    public Result importShapefile(@Body MultipartFile file) {
+        try {
+            spatialDataService.importShapefile(file);
+            return Result.success(&quot;导入成功&quot;);
+        } catch (Exception e) {
+            return Result.fail(&quot;导入失败: &quot; + e.getMessage());
+        }
+    }
+}
+</code></pre>
+
+<p><strong>模块5：监控大屏</strong></p>
+<pre class="codehilite"><code class="language-java">@RestController
+@RequestMapping(&quot;/api/dashboard&quot;)
+public class SpatialDashboardController {
+    private final SpatialRepository spatialRepository;
+    private final AlertRepository alertRepository;
+
+    @Get(&quot;/overview&quot;)
+    public SpatialDashboardOverview getOverview() {
+        // 1. 设备总数
+        long totalDevices = spatialRepository.countDevices();
+
+        // 2. 今日告警数
+        long todayAlerts = alertRepository.countToday();
+
+        // 3. 区域统计
+        List&lt;RegionStatistic&gt; regionStats = spatialRepository.getRegionStatistics();
+
+        // 4. 类型分布
+        List&lt;CategoryStatistic&gt; categoryStats = spatialRepository.getCategoryStatistics();
+
+        return SpatialDashboardOverview.builder()
+                .totalDevices(totalDevices)
+                .todayAlerts(todayAlerts)
+                .regionStats(regionStats)
+                .categoryStats(categoryStats)
+                .build();
+    }
+}
+</code></pre>
+
+<h4 id="1834">18.3.4 部署与运维</h4>
+<p><strong>PostGIS + Cesium 部署</strong></p>
+<pre class="codehilite"><code class="language-yaml">version: '3.8'
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gis_db
+    volumes:
+      - gisdata:/var/lib/postgresql/data
+
+  app:
+    image: your-company/gis-platform:latest
+    ports:
+      - &quot;8080:8080&quot;
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/gis_db
+    depends_on:
+      - postgres
+</code></pre>
+
+<p><strong>监控指标</strong>：
+1. 空间查询响应时间（P95 &lt; 500ms）
+2. 并发用户数
+3. 数据导入速度（万条/分钟）
+4. 地图加载时间（P95 &lt; 2s）</p>
+<hr />
+<h2 id="_1">第四阶段总结与学习建议</h2>
+<h3 id="184">18.4 注意事项</h3>
+<ol>
+<li><strong>坐标系转换</strong>：国内使用 GCJ-02（火星坐标），境外使用 WGS-84，转换时注意精度损失</li>
+<li><strong>空间索引优化</strong>：PostGIS 的 GIST 索引对查询性能至关重要，大批量导入后需 <code>VACUUM ANALYZE</code></li>
+<li><strong>Cesium 资源加载</strong>：3D 地形和影像数据量大，需使用 CDN 加速，避免首次加载过慢</li>
+<li><strong>空间查询性能</strong>：复杂空间运算（如缓冲区分析）消耗 CPU，建议异步处理 + 缓存结果</li>
+<li><strong>多模态数据对齐</strong>：视频帧与空间坐标的时间同步是关键，需使用 NTP 或 PTP 协议</li>
+</ol>
+<h3 id="185">18.5 实战作业</h3>
+<p><strong>作业1（基础巩固）</strong>：实现一个简单的 POI 管理系统，支持创建、查询、删除 POI，使用 PostGIS 存储空间数据</p>
+<p><strong>作业2（拓展应用）：</strong> 实现空间语义检索，支持自然语言查询（如"朝阳区附近的咖啡店"），结合文本匹配 + 空间范围过滤</p>
+<p><strong>作业3（动手实践）</strong>：基于 Cesium 构建一个监控大屏，展示设备实时位置、告警分布、历史轨迹，接入 MQTT 实时数据</p>
+<hr />
+<h2 id="_2">第四阶段总结与学习建议</h2>
+<h3 id="_3">第四阶段核心收获</h3>
+<p>通过第14-18章的学习，你将掌握：</p>
+<ol>
+<li><strong>工程化能力</strong>：架构设计、性能优化、监控部署、安全合规</li>
+<li><strong>领域深度</strong>：知识管理、研发效能、数据分析、IoT监控、GIS分析</li>
+<li><strong>可复用架构</strong>：5个可直接复用的项目骨架</li>
+<li><strong>求职利器</strong>：这些项目经验可直接写入简历</li>
+</ol>
+<hr />
+<p><strong>更新后的完整学习路径</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>周数</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一阶段</td>
+<td>Week 1-2</td>
+<td>第1-4章（基础入门）</td>
+</tr>
+<tr>
+<td>第二阶段</td>
+<td>Week 3-4</td>
+<td>第5-9章（核心进阶）</td>
+</tr>
+<tr>
+<td>第三阶段</td>
+<td>Week 5-6</td>
+<td>第10-13章（高级实战）</td>
+</tr>
+<tr>
+<td><strong>第四阶段</strong></td>
+<td><strong>Week 7-10</strong></td>
+<td><strong>第14-18章（实战应用）</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>建议学习节奏</strong>：
+- Week 7: 第14章（企业知识库）
+- Week 8: 第15章（代码智能助手）
+- Week 9: 第16章（数据智能分析）
+- Week 10: 第17/18章（IoT/GIS 选做）</p>
+<p><strong>下一步行动</strong>：
+1. 选择 1-2 个与当前工作最相关的章节深入学习
+2. 搭建对应的开发环境（PostgreSQL/pgvector、Elasticsearch、TDEngine 等）
+3. 从第14章的练习1开始，逐章完成代码练习
+4. 第14-16章为必做，第17-18章根据兴趣选择
+5. 将完成的项目部署到服务器，写入作品集</p>
+<hr />
+<blockquote>
+<p><strong>学习建议</strong>：
+- 代码必须亲手敲，不要复制粘贴
+- 每个练习尝试 2-3 种变体
+- 遇到问题先看测试用例（<code>src/test/java</code>）
+- 加入 Solon 社区（Gitee/GitHub Discussions）
+- 第四阶段的代码示例更接近生产环境，注意学习工程化实践</p>
+</blockquote>
+            <div class="chapter-nav">
+                <a href="17.html" class="nav-prev">← 第17章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>
