@@ -36,14 +36,16 @@ class HandbookApp {
         ];
     }
 
-    // Navigation setup
+    // Navigation setup - direct navigation for MPA mode
     setupNavigation() {
         const links = document.querySelectorAll('.nav-section a');
         links.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
-                const chapterId = parseInt(link.dataset.chapter);
-                this.loadChapter(chapterId);
+                const href = link.getAttribute('href');
+                if (href) {
+                    window.location.href = href;
+                }
             });
         });
     }
@@ -100,13 +102,11 @@ class HandbookApp {
         `;
     }
 
-    // Load chapter
+    // Navigate to chapter directly (MPA mode)
     loadChapter(chapterId) {
         const chapter = this.chapters.find(c => c.id === chapterId);
         if (!chapter) return;
 
-        this.currentChapter = chapter;
-        
         // Update active link
         document.querySelectorAll('.nav-section a').forEach(link => {
             link.classList.remove('active');
@@ -115,33 +115,8 @@ class HandbookApp {
             }
         });
 
-        // Load chapter content
-        const content = document.getElementById('chapter-content');
-        content.style.opacity = '0';
-        
-        // Fetch chapter HTML
-        fetch(`chapters/${chapter.slug}.html`)
-            .then(response => response.text())
-            .then(html => {
-                content.innerHTML = html;
-                content.style.opacity = '1';
-                
-                // Highlight code blocks
-                document.querySelectorAll('pre code').forEach(block => {
-                    hljs.highlightElement(block);
-                });
-                
-                // Scroll to top
-                window.scrollTo(0, 0);
-            })
-            .catch(err => {
-                content.innerHTML = `
-                    <div class="alert alert-danger">
-                        <strong>加载失败</strong><br>
-                        无法加载第 ${chapterId} 章内容，请稍后重试。
-                    </div>
-                `;
-            });
+        // Direct navigation to chapter page
+        window.location.href = `chapters/${chapter.slug}.html`;
     }
 
     // Search functionality
