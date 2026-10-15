@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第12章 MCP 网关与服务治理 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" class="active">第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="121">12.1 理论讲解</h3>
+<h4 id="1211-mcp">12.1.1 MCP 网关架构</h4>
+<pre class="codehilite"><code>客户端 -&gt; MCP 网关 -&gt; MCP Server 1
+                      -&gt; MCP Server 2
+                      -&gt; MCP Server 3
+</code></pre>
+
+<h4 id="1212">12.1.2 核心功能</h4>
+<ul>
+<li><strong>服务注册与发现</strong></li>
+<li><strong>负载均衡</strong></li>
+<li><strong>熔断与降级</strong></li>
+<li><strong>认证与授权</strong></li>
+<li><strong>调用日志</strong></li>
+</ul>
+<h3 id="122">12.2 实践练习</h3>
+<h4 id="1mcpgatewaytalent">练习1：McpGatewayTalent</h4>
+<pre class="codehilite"><code class="language-java">ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+        .provider(&quot;ollama&quot;)
+        .model(&quot;qwen2.5:1.5b&quot;)
+        .defaultTalentAdd(new McpGatewayTalent())  // 内置网关 Talent
+        .build();
+</code></pre>
+
+<h3 id="123">12.3 项目实战</h3>
+<p><strong>实战任务：企业 MCP 工具市场</strong></p>
+<p>实现：
+- 工具注册中心
+- 权限管理（RBAC）
+- 调用统计与计费
+- 版本管理</p>
+<hr />
+<h2 id="12">第12章 注意事项</h2>
+<ol>
+<li><strong>Gateway Talent 显式引入</strong>：<code>McpGatewayTalent</code> 位于 <code>solon-ai-talent-gateway</code> 模块，需单独引入依赖，不是 <code>solon-ai</code> 聚合包的一部分。</li>
+<li><strong>熔断超时配置</strong>：网关层的熔断策略需要根据 MCP Server 响应时间配置，建议默认 <strong>5 秒超时</strong>，失败阈值 3 次，熔断时长 60 秒。</li>
+<li><strong>全链路追踪</strong>：工具调用日志必须记录 <code>request_id</code>（或 <code>trace_id</code>），否则排查跨 Service 调用问题时难以串联日志。</li>
+<li><strong>RBAC 粒度建议</strong>：权限控制建议到<strong>工具级别</strong>（如允许调用 <code>get_weather</code> 但禁止 <code>delete_user</code>），而非 Server 级别。</li>
+<li><strong>计费维度选择</strong>：计费模型建议按"工具调用次数"或"Token 消耗"计费，按 Server 注册数计费无法反映真实使用量。</li>
+</ol>
+<h2 id="12_1">第12章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>基于 <code>McpGatewayTalent</code> 实现一个简易 MCP 网关：
+- 注册 2 个 MCP Server（本地计算器 Server + 远程天气 Server）
+- 记录每次工具调用的 <code>server_name</code>、<code>tool_name</code>、<code>params</code>、<code>result</code>、<code>cost_ms</code> 到日志文件</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>为网关添加<strong>熔断机制</strong>：
+- 使用 Resilience4j 或 Solon 内置断路器
+- 当某 MCP Server 连续失败 3 次，自动熔断 60 秒
+- 熔断期间返回降级响应："工具暂时不可用，请稍后重试"</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现 MCP 工具市场的 <strong>RBAC 权限管理</strong>：
+- 角色定义：<code>admin</code>（全部权限）、<code>developer</code>（开发工具）、<code>analyst</code>（查询工具）
+- 工具白名单：每个角色绑定允许调用的工具列表
+- 中间件拦截：调用前校验用户角色是否有权调用目标工具
+- 管理页面：可视化展示角色-工具矩阵，支持动态调整</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="11.html" class="nav-prev">← 第11章</a>
+                <a href="13.html" class="nav-next">第13章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第1章 框架概览与环境搭建 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" class="active">第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="11">1.1 理论讲解</h3>
+<h4 id="111-solon-ai">1.1.1 Solon-AI 是什么？</h4>
+<p>Solon-AI 是 <strong>Solon 生态的 AI 开发框架</strong>，提供：</p>
+<ul>
+<li><strong>统一 LLM 接口</strong>：<code>ChatModel</code> 抽象屏蔽不同供应商差异</li>
+<li><strong>多模型方言</strong>：OpenAI、Gemini、Claude、Ollama、DeepSeek、DashScope</li>
+<li><strong>Agent 引擎</strong>：ReAct 自省推理 + Team 多智能体协作</li>
+<li><strong>RAG 全链路</strong>：从文档加载到向量检索的一站式方案</li>
+<li><strong>MCP 协议</strong>：Model Context Protocol 深度集成</li>
+<li><strong>低代码编排</strong>：YAML 驱动的 AI Flow（类似 Dify）</li>
+</ul>
+<h4 id="112">1.1.2 核心架构（三层模型）</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│  应用层（Your Application）              │
+│  - Agent 应用                            │
+│  - RAG 知识库                            │
+│  - AI Flow 工作流                        │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  框架层（Solon-AI Framework）            │
+│  - ChatModel / EmbeddingModel            │
+│  - Agent / Team / Flow                   │
+│  - MCP Server / Client                   │
+│  - Talents 插件体系                      │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│  基础设施层（Infrastructure）             │
+│  - LLM 供应商（OpenAI/Ollama/DeepSeek）  │
+│  - 向量数据库（pgvector/Milvus/Qdrant）  │
+│  - 文档存储（MySQL/ES/Redis）             │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="113">1.1.3 与竞品对比</h4>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Solon-AI</th>
+<th>LangChain Java</th>
+<th>LlamaIndex Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>语言</td>
+<td>Java</td>
+<td>Java</td>
+<td>Python/Java</td>
+</tr>
+<tr>
+<td>轻量级</td>
+<td>✅ 极简</td>
+<td>❌ 重</td>
+<td>❌ 重</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>✅ ReAct + Team</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>RAG</td>
+<td>✅ 全链路</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>✅ 原生支持</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>低代码 Flow</td>
+<td>✅ YAML</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>插件体系</td>
+<td>✅ Talents</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 实践练习</h3>
+<h4 id="1">练习1：环境搭建</h4>
+<p><strong>步骤1：创建 Maven 项目</strong></p>
+<pre class="codehilite"><code class="language-xml">&lt;!-- pom.xml --&gt;
+&lt;parent&gt;
+    &lt;groupId&gt;org.noear&lt;/groupId&gt;
+    &lt;artifactId&gt;solon-ai-parent&lt;/artifactId&gt;
+    &lt;version&gt;4.1.1&lt;/version&gt;
+&lt;/parent&gt;
+
+&lt;dependencies&gt;
+    &lt;!-- 核心模块：包含所有 dialects --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.noear&lt;/groupId&gt;
+        &lt;artifactId&gt;solon-ai&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- Agent 模块（可选） --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.noear&lt;/groupId&gt;
+        &lt;artifactId&gt;solon-ai-agent&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- MCP 模块（可选） --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.noear&lt;/groupId&gt;
+        &lt;artifactId&gt;solon-ai-mcp&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+</code></pre>
+
+<p><strong>步骤2：配置 application.yml</strong></p>
+<pre class="codehilite"><code class="language-yaml">server:
+  port: 8080
+
+solon:
+  ai:
+    chat:
+      default_provider: ollama
+      default_model: qwen2.5:1.5b
+      api_url: http://127.0.0.1:11434/api/chat
+</code></pre>
+
+<p><strong>步骤3：编写启动类</strong></p>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.Solon;
+
+public class App {
+    public static void main(String[] args) {
+        Solon.start(App.class, args);
+    }
+}
+</code></pre>
+
+<h4 id="2-hello-world">练习2：第一个 Hello World</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.chat.ChatModel;
+import org.noear.solon.ai.chat.ChatMessage;
+import org.noear.solon.ai.chat.ChatResponse;
+
+public class HelloWorld {
+    public static void main(String[] args) {
+        // 1. 构建 ChatModel
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 2. 发送消息
+        ChatResponse response = chatModel.prompt(&quot;你好，请用一句话介绍你自己&quot;)
+                .call();
+
+        // 3. 输出结果
+        System.out.println(response.getMessage());
+    }
+}
+</code></pre>
+
+<p><strong>运行方式</strong>（需先启动 Ollama）：</p>
+<pre class="codehilite"><code class="language-bash"># 1. 启动 Ollama
+ollama serve
+
+# 2. 拉取模型
+ollama pull qwen2.5:1.5b
+
+# 3. 运行 Java 程序
+mvn spring-boot:run
+</code></pre>
+
+<h3 id="13">1.3 项目实战</h3>
+<p><strong>实战任务：多供应商切换</strong></p>
+<p>实现一个简单的命令行工具，支持在 OpenAI、Ollama、DeepSeek 之间无缝切换：</p>
+<pre class="codehilite"><code class="language-java">public class MultiProviderDemo {
+    public static void main(String[] args) {
+        // OpenAI
+        ChatModel openai = ChatModel.of(&quot;https://api.openai.com/v1/chat&quot;)
+                .provider(&quot;openai&quot;)
+                .apiKey(&quot;your-openai-key&quot;)
+                .model(&quot;gpt-4o&quot;)
+                .build();
+
+        // DeepSeek
+        ChatModel deepseek = ChatModel.of(&quot;https://api.deepseek.com/v1/chat&quot;)
+                .provider(&quot;openai&quot;)  // 兼容 OpenAI 协议
+                .apiKey(&quot;your-deepseek-key&quot;)
+                .model(&quot;deepseek-chat&quot;)
+                .build();
+
+        // Ollama（本地）
+        ChatModel ollama = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 测试三个模型
+        String prompt = &quot;用一句话解释什么是 AI Agent&quot;;
+
+        System.out.println(&quot;=== OpenAI ===&quot;);
+        System.out.println(openai.prompt(prompt).call().getMessage());
+
+        System.out.println(&quot;=== DeepSeek ===&quot;);
+        System.out.println(deepseek.prompt(prompt).call().getMessage());
+
+        System.out.println(&quot;=== Ollama ===&quot;);
+        System.out.println(ollama.prompt(prompt).call().getMessage());
+    }
+}
+</code></pre>
+
+<hr />
+<h2 id="1_1">第1章 注意事项</h2>
+<ol>
+<li><strong>版本稳定性</strong>：当前 <code>solon-ai</code> 处于 <code>dev</code> 版本，API 可能随时调整，生产使用请锁定 commit 或等待正式发布。</li>
+<li><strong>provider 参数敏感</strong>：<code>provider("ollama")</code> 区分大小写，写成 <code>"Ollama"</code> 将无法识别对应方言。</li>
+<li><strong>聚合包范围误区</strong>：<code>solon-ai</code> 只聚合 dialects，<strong>不包含</strong> <code>agent</code> / <code>flow</code> / <code>mcp</code> / <code>talents</code>，这些需要按需单独引入依赖。</li>
+<li><strong>Ollama 本地地址</strong>：默认监听 <code>127.0.0.1:11434</code>，Docker 部署时需加 <code>--network host</code> 或显式映射 <code>11434</code> 端口。</li>
+<li><strong>JDK 版本建议</strong>：虽然最低支持 JDK 8，但 reactive 流和虚拟线程相关特性推荐 <strong>JDK 17+</strong>。</li>
+</ol>
+<h2 id="1_2">第1章 实战作业</h2>
+<h3 id="1_3">作业1：基础巩固</h3>
+<p>完成本章"多供应商切换"示例，在 OpenAI、Ollama、DeepSeek 三个模型上运行同一 prompt，观察响应速度和输出风格差异，将结果整理记录到 <code>chapter1-comparison.md</code>。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>为 <code>MultiProviderDemo</code> 添加异常处理和重试机制：
+- 网络超时设置为 30 秒
+- 失败后自动重试 3 次，采用指数退避策略
+- 将运行结果写入 CSV 文件（字段：模型名、耗时、token 数、是否成功）</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>搭建基于 Solon Web 的 REST 服务，暴露 <code>POST /api/chat</code> 接口：
+- 接收 JSON：<code>{"provider":"ollama","model":"qwen2.5:1.5b","prompt":"..."}</code>
+- 返回 JSON：<code>{"content":"...","usage":{},"finishReason":"stop"}</code>
+- 支持流式和非流式两种模式（通过 <code>?stream=true</code> 参数控制）</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="../index.html" class="nav-prev">← 返回首页</a>
+                <a href="02.html" class="nav-next">第2章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第9章 Talents 能力插件体系 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" class="active">第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="91">9.1 理论讲解</h3>
+<h4 id="911-talent">9.1.1 Talent 设计理念</h4>
+<p>Talent = <strong>领域能力 + 工具集 + 准入规则 + 动态指令</strong></p>
+<pre class="codehilite"><code class="language-java">Talent talent = new TalentDesc(&quot;order_expert&quot;)
+        .description(&quot;订单助手&quot;)
+        // 动态准入：只有提到&quot;订单&quot;时才激活
+        .isSupported(prompt -&gt; prompt.getUserMessageContent().contains(&quot;订单&quot;))
+        // 动态指令：根据用户等级注入不同 SOP
+        .instruction(prompt -&gt; {
+            if (&quot;VIP&quot;.equals(prompt.getMeta(&quot;user_level&quot;))) {
+                return &quot;这是尊贵的 VIP 客户，请优先调用 fast_track_tool。&quot;;
+            }
+            return &quot;按常规流程处理订单查询。&quot;;
+        })
+        .toolAdd(new OrderTools());
+</code></pre>
+
+<h4 id="912-17-talent">9.1.2 17 个预置 Talent</h4>
+<table>
+<thead>
+<tr>
+<th>Talent</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>cli</code></td>
+<td>命令行工具</td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>代码生成与执行</td>
+</tr>
+<tr>
+<td><code>lsp</code></td>
+<td>语言服务器协议</td>
+</tr>
+<tr>
+<td><code>web</code></td>
+<td>网页抓取</td>
+</tr>
+<tr>
+<td><code>mail</code></td>
+<td>邮件收发</td>
+</tr>
+<tr>
+<td><code>pdf</code></td>
+<td>PDF 处理</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>文件操作</td>
+</tr>
+<tr>
+<td><code>memory</code></td>
+<td>记忆管理</td>
+</tr>
+<tr>
+<td><code>gateway</code></td>
+<td>网关路由</td>
+</tr>
+<tr>
+<td><code>text2sql</code></td>
+<td>文本转 SQL</td>
+</tr>
+<tr>
+<td><code>lucene</code></td>
+<td>全文检索</td>
+</tr>
+<tr>
+<td><code>generation</code></td>
+<td>内容生成</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>数据处理</td>
+</tr>
+<tr>
+<td><code>diff</code></td>
+<td>差异对比</td>
+</tr>
+<tr>
+<td><code>social</code></td>
+<td>社交媒体</td>
+</tr>
+<tr>
+<td><code>sys</code></td>
+<td>系统操作</td>
+</tr>
+<tr>
+<td><code>mount</code></td>
+<td>挂载源管理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 实践练习</h3>
+<h4 id="1-talent">练习1：自定义 Talent</h4>
+<pre class="codehilite"><code class="language-java">Talent hrTalent = new TalentDesc(&quot;hr_assistant&quot;)
+        .description(&quot;HR 助手&quot;)
+        .isSupported(prompt -&gt; 
+            prompt.getUserMessageContent().contains(&quot;请假&quot;) ||
+            prompt.getUserMessageContent().contains(&quot;离职&quot;) ||
+            prompt.getUserMessageContent().contains(&quot;入职&quot;)
+        )
+        .instruction(prompt -&gt; &quot;你是一位 HR 助手，请根据公司政策回答员工问题。&quot;)
+        .toolAdd(new LeaveQueryTool())
+        .toolAdd(new PolicyQueryTool());
+
+chatModel.prompt(&quot;我想请假 3 天&quot;)
+        .options(op -&gt; op.talentAdd(hrTalent))
+        .call();
+</code></pre>
+
+<h3 id="93">9.3 项目实战</h3>
+<p><strong>实战任务：企业知识助手</strong></p>
+<p>结合 Talent + RAG + Agent，实现：
+- <code>memory</code> Talent：记忆员工信息
+- <code>pdf</code> Talent：解析员工手册
+- <code>mail</code> Talent：发送通知邮件
+- <code>lucene</code> Talent：全文检索政策文档</p>
+<hr />
+<h2 id="9">第9章 注意事项</h2>
+<ol>
+<li><strong>isSupported 动态评估</strong>：<code>TalentDesc.isSupported()</code> 在<strong>每次用户输入</strong>时都会执行，不要在内部写高开销逻辑，避免影响响应速度。</li>
+<li><strong>instruction 长度控制</strong>：动态指令返回的字符串建议控制在 <code>500</code> 字以内，过长会挤占模型推理空间，且可能超出上下文窗口。</li>
+<li><strong>Talent 依赖显式引入</strong>：预置 Talent（如 <code>pdf</code>、<code>mail</code>）需要单独引入对应模块，仅引入 <code>solon-ai-talents</code> 不会自动加载全部 Talent。</li>
+<li><strong>描述合并机制</strong>：Talent 内部调用工具时，Talent 描述与工具描述会<strong>合并</strong>传给 LLM，注意总长度是否超出模型限制。</li>
+<li><strong>调试技巧</strong>：使用 <code>System.out.println("talent supported: " + talent.isSupported(prompt))</code> 打印准入结果，确认 <code>instruction</code> 动态生成符合预期。</li>
+</ol>
+<h2 id="9_1">第9章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>自定义一个 <code>leave_assistant</code> Talent，处理以下场景：
+- 查询年假剩余天数
+- 请假流程说明
+- 加班调休规则
+要求：<code>isSupported</code> 匹配"请假/年假/调休/加班"关键词。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>实现 Talent 的<strong>上下文感知</strong>能力：
+- 从 <code>prompt.getMeta("department")</code> 获取用户部门
+- 技术部：返回弹性工作制政策
+- 市场部：返回固定考勤政策
+- 未识别部门：返回通用政策</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>组合 <code>memory</code> + <code>pdf</code> + <code>mail</code> 三个 Talent，实现"新员工入职流程自动化"：
+1. <code>memory</code> Talent：记录新员工姓名、部门、岗位
+2. <code>pdf</code> Talent：解析《员工手册.pdf》，提取相关章节
+3. <code>mail</code> Talent：发送欢迎邮件（含部门政策摘要）
+用户输入"我要入职"时，自动触发完整流程。</p>
+<hr />
+<h2 id="_1">========================================</h2>
+<h2 id="_2">第三阶段：高级实战</h2>
+<h2 id="_3">========================================</h2>
+<hr />
+            <div class="chapter-nav">
+                <a href="08.html" class="nav-prev">← 第8章</a>
+                <a href="10.html" class="nav-next">第10章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

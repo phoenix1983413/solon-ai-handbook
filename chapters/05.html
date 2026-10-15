@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第5章 RAG 知识库全链路 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" class="active">第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="51">5.1 理论讲解</h3>
+<h4 id="511-rag">5.1.1 RAG 架构（五步法）</h4>
+<pre class="codehilite"><code>┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│ 文档加载  │ -&gt; │ 文档切分  │ -&gt; │ 向量化    │ -&gt; │ 存储索引  │ -&gt; │ 检索增强  │
+│ Loader   │    │ Splitter │    │ Embedding│    │ Repository│   │ Retrieval│
+└──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+</code></pre>
+
+<h4 id="512">5.1.2 核心组件</h4>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>接口</th>
+<th>实现示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Loader</td>
+<td><code>DocumentLoader</code></td>
+<td><code>PdfLoader</code>、<code>MarkdownLoader</code>、<code>ExcelLoader</code></td>
+</tr>
+<tr>
+<td>Splitter</td>
+<td><code>DocumentSplitter</code></td>
+<td><code>RegexTextSplitter</code>、<code>TokenSizeTextSplitter</code></td>
+</tr>
+<tr>
+<td>Embedding</td>
+<td><code>EmbeddingModel</code></td>
+<td>Ollama bge-m3、DashScope、OpenAI</td>
+</tr>
+<tr>
+<td>Repository</td>
+<td><code>Repository</code></td>
+<td><code>InMemoryRepository</code>、<code>PgVectorRepository</code></td>
+</tr>
+<tr>
+<td>Reranker</td>
+<td><code>RerankingModel</code></td>
+<td>BGE-Reranker、Cohere Rerank</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 实践练习</h3>
+<h4 id="1inmemory">练习1：InMemory 知识库（零依赖）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.rag.*;
+import org.noear.solon.ai.rag.loader.MarkdownLoader;
+import org.noear.solon.ai.rag.splitter.RegexTextSplitter;
+
+public class SimpleRAG {
+    public static void main(String[] args) throws Exception {
+        // 1. 构建 Embedding Model（使用 Ollama 本地 bge-m3）
+        EmbeddingModel embeddingModel = EmbeddingModel.of(&quot;http://127.0.0.1:11434/api/embed&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;bge-m3&quot;)
+                .build();
+
+        // 2. 创建内存知识库
+        InMemoryRepository repository = new InMemoryRepository(embeddingModel);
+
+        // 3. 加载并切分文档
+        DocumentLoader loader = new MarkdownLoader(
+                &quot;https://solon.noear.org/article/about?format=md&quot;
+        );
+        List&lt;Document&gt; documents = loader.load();
+
+        // 4. 切分
+        DocumentSplitter splitter = new RegexTextSplitter();
+        List&lt;Document&gt; chunks = splitter.split(documents);
+
+        // 5. 写入知识库
+        repository.insert(chunks);
+
+        // 6. 检索
+        String query = &quot;Solon 框架是谁开发的？&quot;;
+        List&lt;Document&gt; results = repository.search(query, 3);
+
+        // 7. 构造增强 Prompt
+        ChatMessage augmentedMessage = ChatMessage.ofUserAugment(query, results);
+
+        // 8. 调用 LLM
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        String answer = chatModel.prompt(augmentedMessage)
+                .system(&quot;你是一个知识库助手，请基于提供的上下文回答用户问题。&quot;
+                        + &quot;如果上下文中没有答案，请明确告知。&quot;)
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(&quot;AI: &quot; + answer);
+    }
+}
+</code></pre>
+
+<h4 id="2pgvector">练习2：PgVector 持久化知识库</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.rag.repository.pg.PgVectorRepository;
+
+public class PgVectorRAG {
+    public static void main(String[] args) throws Exception {
+        // 1. Embedding Model
+        EmbeddingModel embeddingModel = EmbeddingModel.of(&quot;http://127.0.0.1:11434/api/embed&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;bge-m3&quot;)
+                .build();
+
+        // 2. PgVector Repository（需要 PostgreSQL + pgvector 扩展）
+        PgVectorRepository repository = PgVectorRepository.builder(embeddingModel)
+                .url(&quot;jdbc:postgresql://localhost:5432/rag_db&quot;)
+                .username(&quot;postgres&quot;)
+                .password(&quot;password&quot;)
+                .table(&quot;knowledge_base&quot;)
+                .build();
+
+        // 3. 加载 PDF
+        List&lt;Document&gt; documents = new PdfLoader(&quot;/path/to/file.pdf&quot;).load();
+
+        // 4. 切分并写入
+        repository.insert(new TokenSizeTextSplitter().split(documents));
+
+        // 5. 检索
+        List&lt;Document&gt; results = repository.search(&quot;什么是 RAG？&quot;, 5);
+
+        results.forEach(doc -&gt; {
+            System.out.println(&quot;Score: &quot; + doc.getScore());
+            System.out.println(&quot;Content: &quot; + doc.getText());
+            System.out.println(&quot;---&quot;);
+        });
+    }
+}
+</code></pre>
+
+<h4 id="3reranking">练习3：重排序（Reranking）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.rag.rerank.RerankingModel;
+
+public class RerankingDemo {
+    public static void main(String[] args) {
+        // 1. 初始检索（召回 Top 20）
+        List&lt;Document&gt; candidates = repository.search(query, 20);
+
+        // 2. Reranker 精排（BGE-Reranker）
+        RerankingModel reranker = RerankingModel.of(&quot;http://127.0.0.1:11434/api/rerank&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;bge-reranker-v2-m3&quot;)
+                .build();
+
+        // 3. 精排后取 Top 5
+        List&lt;Document&gt; finalResults = reranker.rerank(query, candidates, 5);
+
+        // 4. 增强 Prompt
+        ChatMessage message = ChatMessage.ofUserAugment(query, finalResults);
+    }
+}
+</code></pre>
+
+<h3 id="53">5.3 项目实战</h3>
+<p><strong>实战任务：企业文档智能问答系统</strong></p>
+<p>实现一个支持多格式文档的 RAG 系统：</p>
+<ul>
+<li><strong>文档管理</strong>：上传 PDF/Word/Excel/Markdown</li>
+<li><strong>自动切分</strong>：支持固定长度 + 重叠滑动窗口</li>
+<li><strong>向量化</strong>：使用 bge-m3（本地 Ollama）</li>
+<li><strong>持久化</strong>：PgVector 存储</li>
+<li><strong>检索增强</strong>：Hybrid Search（向量 + 关键词）+ Rerank</li>
+<li><strong>对话接口</strong>：REST API 暴露</li>
+</ul>
+<p><strong>技术栈</strong>：
+- Solon-AI（RAG 全链路）
+- PostgreSQL + pgvector（向量存储）
+- Ollama（bge-m3 嵌入模型）
+- Solon Web（REST API）</p>
+<hr />
+<h2 id="5">第5章 注意事项</h2>
+<ol>
+<li><strong>文档切分粒度</strong>：chunk 过短会丢失语义，过长会稀释检索精度。推荐起始值：<code>500-1000 token</code>，重叠率 <code>10%-20%</code>。</li>
+<li><strong>InMemoryRepository 仅用于原型</strong>：数据完全存在内存，应用重启即丢失，<strong>严禁用于生产</strong>。</li>
+<li><strong>嵌入 ≠ 重排序</strong>：<code>EmbeddingModel</code> 用于向量化，<code>RerankingModel</code> 用于精排，二者模型不同、API 不同，不可混用。</li>
+<li><strong>PgVector 环境要求</strong>：需要 PostgreSQL 15+ 且已安装 <code>pgvector</code> 扩展，建表时列类型必须为 <code>vector(维度)</code>，否则插入会报错。</li>
+<li><strong>向量检索不稳定性</strong>：相同 query 多次检索结果可能不一致（尤其是 topK 边界），生产环境建议<strong>必配 Rerank</strong> 提升结果稳定性。</li>
+</ol>
+<h2 id="5_1">第5章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>使用 <code>MarkdownLoader</code> 加载一篇 Solon 官方文档（如 <code>https://solon.noear.org/article/about?format=md</code>），构建 <code>InMemoryRepository</code>，执行 3 个不同 query 并输出检索结果及相似度分数。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>实现 <strong>Hybrid Search</strong>（混合检索）：
+- 向量检索：召回 Top 20
+- 关键词检索：使用 <code>solon-ai-talent-lucene</code> 模块
+- 融合策略：Reciprocal Rank Fusion (RRF)
+- 最终取 Top 5 并做 Rerank</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>构建一个文件上传 Web 服务：
+- <code>POST /api/document/upload</code>：支持 PDF/Markdown/Word
+- 上传后自动：切分（<code>TokenSizeTextSplitter</code>）→ 向量化（<code>bge-m3</code>）→ 存入 <code>PgVectorRepository</code>
+- <code>GET /api/document/search?q=xxx</code>：执行检索并返回 Top 5 结果（含原文片段、分数、来源文件）</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="04.html" class="nav-prev">← 第4章</a>
+                <a href="06.html" class="nav-next">第6章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

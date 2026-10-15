@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第4章 工具（Tool）基础 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" class="active">第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="41">4.1 理论讲解</h3>
+<h4 id="411">4.1.1 工具是什么？</h4>
+<p>工具（Tool）是 <strong>让 LLM 具备外部能力</strong> 的机制，例如：
+- 查询天气
+- 执行 SQL
+- 调用 API
+- 读写文件</p>
+<p>Solon-AI 的工具模型：</p>
+<pre class="codehilite"><code class="language-java">ToolProvider.builder(&quot;tool_name&quot;)
+    .description(&quot;工具描述&quot;)
+    .param(&quot;param1&quot;, String.class, &quot;参数说明&quot;, true)  // required
+    .param(&quot;param2&quot;, Integer.class, &quot;参数说明&quot;, false) // optional
+    .executable(args -&gt; {
+        // 执行逻辑
+        return result;
+    })
+    .build();
+</code></pre>
+
+<h3 id="42">4.2 实践练习</h3>
+<h4 id="1">练习1：天气查询工具</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.chat.tool.ToolProvider;
+import org.noear.solon.ai.chat.tool.ToolExecutable;
+
+public class WeatherToolDemo {
+
+    static ToolProvider weatherTool = ToolProvider.of(&quot;get_weather&quot;)
+            .description(&quot;获取指定城市的当前天气&quot;)
+            .param(&quot;city&quot;, String.class, &quot;城市名称，如：北京、上海&quot;, true)
+            .param(&quot;unit&quot;, String.class, &quot;温度单位：celsius/fahrenheit&quot;, false)
+            .executable((ToolExecutable) args -&gt; {
+                String city = args.getString(&quot;city&quot;);
+                String unit = args.optString(&quot;unit&quot;, &quot;celsius&quot;);
+
+                // 模拟天气数据
+                double temp = 20 + Math.random() * 10;
+                if (&quot;fahrenheit&quot;.equals(unit)) {
+                    temp = temp * 9 / 5 + 32;
+                }
+
+                return String.format(&quot;{\&quot;city\&quot;:\&quot;%s\&quot;,\&quot;temp\&quot;:%.1f,\&quot;unit\&quot;:\&quot;%s\&quot;}&quot;, 
+                        city, temp, unit);
+            });
+
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        String response = chatModel.prompt(&quot;北京今天天气怎么样？&quot;)
+                .options(op -&gt; op.toolAdd(weatherTool))
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(response);
+    }
+}
+</code></pre>
+
+<h4 id="2">练习2：计算器工具</h4>
+<pre class="codehilite"><code class="language-java">static ToolProvider calculatorTool = ToolProvider.of(&quot;calculator&quot;)
+        .description(&quot;执行基本的数学运算，支持加减乘除&quot;)
+        .param(&quot;expression&quot;, String.class, &quot;数学表达式，如：2+3*4&quot;, true)
+        .executable((ToolExecutable) args -&gt; {
+            String expr = args.getString(&quot;expression&quot;);
+            try {
+                // 注意：生产环境应使用安全解析器，避免 ScriptEngine 的安全风险
+                double result = new ScriptEngineManager()
+                        .getEngineByName(&quot;javascript&quot;)
+                        .eval(expr) instanceof Number n ? n.doubleValue() : 0;
+                return String.format(&quot;%s = %.2f&quot;, expr, result);
+            } catch (Exception e) {
+                return &quot;计算错误: &quot; + e.getMessage();
+            }
+        });
+</code></pre>
+
+<h3 id="43">4.3 项目实战</h3>
+<p><strong>实战任务：智能助手工具集</strong></p>
+<p>实现一个包含 3 个工具的智能助手：
+1. <strong>当前时间工具</strong>：<code>get_current_time</code>
+2. <strong>简单计算器工具</strong>：<code>calculator</code>
+3. <strong>随机数生成器</strong>：<code>random_number</code>（支持指定范围）</p>
+<hr />
+<h2 id="4">第4章 注意事项</h2>
+<ol>
+<li><strong>ToolProvider 参数顺序</strong>：<code>param(name, type, description, required)</code> 第四个参数才是必填标志，顺序容易写错。</li>
+<li><strong>返回值类型</strong>：<code>ToolExecutable</code> 的返回值必须是 <code>String</code> 或可被 JSON 序列化的对象，否则 LLM 会收到乱码或解析失败。</li>
+<li><strong>描述即准确率</strong>：工具描述（<code>description</code>）和参数说明直接影响模型调用准确率，建议包含<strong>参数格式示例</strong>和<strong>返回格式说明</strong>。</li>
+<li><strong>ScriptEngine 安全风险</strong>：<code>ScriptEngineManager</code> 在服务端暴露 eval 存在代码注入风险，生产环境应使用受限表达式解析器（如 exp4j、JEval）。</li>
+<li><strong>线程安全</strong>：LLM 可能并发调用同一工具，确保 <code>ToolExecutable</code> 实现是<strong>无状态</strong>或线程安全的，避免共享可变状态。</li>
+</ol>
+<h2 id="4_1">第4章 实战作业</h2>
+<h3 id="1_1">作业1：基础巩固</h3>
+<p>实现一个 <code>currency_converter</code> 汇率转换工具，支持 USD、CNY、EUR 三种货币互转（使用固定汇率：1 USD = 7.2 CNY，1 EUR = 7.8 CNY）。</p>
+<h3 id="2_1">作业2：拓展应用</h3>
+<p>实现<strong>链式工具调用</strong>场景：
+- <code>geocode(city)</code>：将城市名转换为经纬度（模拟返回）
+- <code>weather_by_coord(lat, lon)</code>：根据经纬度查询天气
+让 LLM 先调用 <code>geocode</code>，再根据返回结果调用 <code>weather_by_coord</code>。</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现一个 <code>file_tools</code> 工具集，包含三个方法：
+- <code>read_file(path)</code>：读取本地文本文件，限制最大 100KB
+- <code>write_file(path, content)</code>：写入文件（覆盖模式）
+- <code>append_file(path, content)</code>：追加内容到文件末尾
+<strong>要求</strong>：路径必须限制在 <code>/tmp</code> 目录下，防止目录遍历攻击。</p>
+<hr />
+<h2 id="_1">========================================</h2>
+<h2 id="_2">第二阶段：核心进阶</h2>
+<h2 id="_3">========================================</h2>
+<hr />
+            <div class="chapter-nav">
+                <a href="03.html" class="nav-prev">← 第3章</a>
+                <a href="05.html" class="nav-next">第5章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

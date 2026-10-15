@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第10章 多智能体协作系统 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" class="active">第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="101">10.1 理论讲解</h3>
+<h4 id="1011-agent">10.1.1 多 Agent 架构模式</h4>
+<pre class="codehilite"><code>模式1：层级式（Supervisor）
+    ┌─────────────┐
+    │ Supervisor  │
+    └──────┬──────┘
+           │
+    ┌──────┼──────┐
+    ▼      ▼      ▼
+ Agent1 Agent2 Agent3
+
+模式2：流水线（Pipeline）
+    Agent1 → Agent2 → Agent3
+
+模式3：合同网（Contract Net）
+    Manager ← Bidders
+           ↓
+     Awarded Worker
+
+模式4：黑板（Blackboard）
+    ┌─────────────────┐
+    │  Shared Blackboard │
+    └─────────────────┘
+           ▲
+    Agent1 Agent2 Agent3
+</code></pre>
+
+<h4 id="1012">10.1.2 通信与同步</h4>
+<ul>
+<li><strong>消息传递</strong>：通过 <code>TeamMessage</code> 在 Agent 间传递</li>
+<li><strong>状态共享</strong>：Blackboard 模式共享上下文</li>
+<li><strong>结果合并</strong>：Supervisor 汇总子 Agent 输出</li>
+</ul>
+<h3 id="102">10.2 实践练习</h3>
+<h4 id="1graph-langgraph">练习1：Graph 编排（LangGraph 风格）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.agent.graph.*;
+
+public class GraphAgentDemo {
+    public static void main(String[] args) {
+        // 定义图
+        Graph graph = Graph.builder()
+                .node(&quot;classify&quot;, new ClassifyNode())
+                .node(&quot;retrieve&quot;, new RetrieveNode())
+                .node(&quot;generate&quot;, new GenerateNode())
+                .edge(&quot;classify&quot;, &quot;retrieve&quot;)
+                .edge(&quot;retrieve&quot;, &quot;generate&quot;)
+                .build();
+
+        // 执行图
+        GraphResult result = graph.run(input);
+        System.out.println(result.getOutput());
+    }
+}
+</code></pre>
+
+<h4 id="2human-in-the-loop">练习2：人机协作（Human-in-the-Loop）</h4>
+<pre class="codehilite"><code class="language-java">TeamAgent team = TeamAgent.of(chatModel)
+        .name(&quot;approval_team&quot;)
+        .protocol(TeamProtocols.HIERARCHICAL)
+        .humanInLoop(true)  // 开启人工审批
+        .agentAdd(workerAgent)
+        .build();
+
+// 当需要人工审批时，Agent 会暂停并等待
+String result = team.prompt(&quot;请审批这份合同&quot;)
+        .call()
+        .getMessage()
+        .getContent();
+</code></pre>
+
+<h3 id="103">10.3 项目实战</h3>
+<p><strong>实战任务：智能项目管理助手</strong></p>
+<p>实现一个多 Agent 协作的项目管理系统：</p>
+<ul>
+<li><strong>Planner Agent</strong>：分解任务，生成计划</li>
+<li><strong>Coder Agent</strong>：编写代码</li>
+<li><strong>Reviewer Agent</strong>：代码审查</li>
+<li><strong>Tester Agent</strong>：生成测试用例</li>
+<li><strong>Reporter Agent</strong>：生成进度报告</li>
+</ul>
+<hr />
+<h2 id="10">第10章 注意事项</h2>
+<ol>
+<li><strong>Graph 拓扑约束</strong>：节点（node）名称必须唯一，边（edge）的目标节点<strong>必须先定义</strong>，否则 Graph 启动会报 <code>NodeNotFoundException</code>。</li>
+<li><strong>Human-in-the-Loop 阻塞模型</strong>：开启后 Agent 执行会阻塞等待用户输入，Web 场景需封装为异步接口（如 <code>Mono/Flux</code>），避免阻塞 Servlet 线程。</li>
+<li><strong>TeamAgent.prompt() 同步阻塞</strong>：默认 <code>prompt().call()</code> 是阻塞调用，高并发场景建议使用 <code>prompt().stream()</code> 响应式流。</li>
+<li><strong>Blackboard 并发安全</strong>：多 Agent 通过共享黑板（Blackboard）交换数据时，注意数据一致性问题，必要时加同步锁。</li>
+<li><strong>子 Agent 失败策略</strong>：默认行为是向上抛出异常终止整个 Team，需在 Supervisor 层显式捕获并决定是否重试或降级。</li>
+</ol>
+<h2 id="10_1">第10章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>实现一个"调研助手 Graph"：
+- 节点1（classify）：判断用户问题是"技术类"还是"商业类"
+- 节点2（retrieve）：根据分类检索不同知识库
+- 节点3（generate）：生成结构化调研报告
+使用 <code>Graph.builder()</code> 定义节点和边，执行 3 个不同 query。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>实现带<strong>重试机制</strong>的 Agent 调用：
+- 子 Agent（如 <code>Coder Agent</code>）失败后自动重试 2 次
+- 每次重试间隔 5 秒，并在 prompt 中注入前一次错误信息
+- 记录重试次数和最终结果到日志</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现"智能项目管理助手"（完整版）：
+- <strong>Planner</strong>：接收需求文档，生成 Task 列表（Markdown 表格）
+- <strong>Coder</strong>：根据 Task 编写代码（Java/Python）
+- <strong>Reviewer</strong>：审查 Coder 产出，给出修改意见
+- <strong>Tester</strong>：编写单元测试用例（JUnit/pytest）
+- <strong>Reporter</strong>：汇总各阶段产出，生成项目周报
+要求使用 <code>HIERARCHICAL</code> 协议，Supervisor 负责结果汇总。</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="09.html" class="nav-prev">← 第9章</a>
+                <a href="11.html" class="nav-next">第11章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

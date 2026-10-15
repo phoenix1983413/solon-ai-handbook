@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第11章 企业级 RAG 应用 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" class="active">第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="111">11.1 理论讲解</h3>
+<h4 id="1111-rag">11.1.1 高级 RAG 技术</h4>
+<ul>
+<li><strong>Hybrid Search</strong>：向量检索 + 关键词检索（BM25）</li>
+<li><strong>Query Rewriting</strong>：用户查询重写</li>
+<li><strong>Context Compression</strong>：上下文压缩</li>
+<li><strong>Multi-Hop RAG</strong>：多跳推理检索</li>
+<li><strong>Agentic RAG</strong>：Agent 自主决定检索策略</li>
+</ul>
+<h4 id="1112">11.1.2 生产环境考量</h4>
+<ul>
+<li><strong>文档版本管理</strong>：支持增量更新</li>
+<li><strong>权限控制</strong>：基于用户的访问控制（RLS）</li>
+<li><strong>监控与日志</strong>：检索质量评估</li>
+<li><strong>缓存策略</strong>：热点查询缓存</li>
+</ul>
+<h3 id="112">11.2 实践练习</h3>
+<h4 id="1">练习1：混合检索</h4>
+<pre class="codehilite"><code class="language-java">// 1. 向量检索
+List&lt;Document&gt; vectorResults = vectorRepository.search(query, 20);
+
+// 2. 关键词检索（Lucene）
+List&lt;Document&gt; keywordResults = luceneRepository.search(query, 20);
+
+// 3. 结果融合（RRF）
+List&lt;Document&gt; fused = hybridSearch(vectorResults, keywordResults);
+
+// 4. Rerank
+List&lt;Document&gt; finalResults = reranker.rerank(query, fused, 5);
+</code></pre>
+
+<h3 id="113">11.3 项目实战</h3>
+<p><strong>实战任务：法律文档智能问答</strong></p>
+<ul>
+<li>支持上传合同、法规、判例</li>
+<li>多文档对比分析</li>
+<li>引用溯源（显示参考段落）</li>
+<li>敏感信息脱敏</li>
+</ul>
+<hr />
+<h2 id="11">第11章 注意事项</h2>
+<ol>
+<li><strong>RRF 融合参数 k</strong>：Reciprocal Rank Fusion 中的 <code>k</code> 通常取 60，k 过大则权重趋近均匀，k 过小则 Top1 结果占主导，需要根据业务调优。</li>
+<li><strong>Query Rewriting 边界</strong>：重写次数建议 <strong>1-2 次</strong>，过度重写（如 5 次以上）会引入噪声，反而降低检索精度。</li>
+<li><strong>Context Compression 慎用</strong>：压缩会丢失细节，法律、医疗、金融等对精度要求高的场景建议保留完整上下文。</li>
+<li><strong>增量更新策略</strong>：文档版本更新时，建议按 <code>doc_id</code> 删除旧向量再插入新向量，不要直接覆盖，避免残留旧数据。</li>
+<li><strong>RLS 实现位置</strong>：基于用户的访问控制（Row Level Security）需要在 Repository 层（如 <code>PgVectorRepository</code>）显式过滤，不是向量库原生支持。</li>
+</ol>
+<h2 id="11_1">第11章 实战作业</h2>
+<h3 id="1_1">作业1：基础巩固</h3>
+<p>实现 Hybrid Search：
+- 向量检索：PgVector，召回 Top 20
+- 关键词检索：Lucene，召回 Top 20
+- RRF 融合（k=60），取 Top 10
+- BGE-Reranker 精排，最终输出 Top 5</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>实现 <strong>Query Rewriting</strong> 增强：
+- 用户原始 query："RAG 是什么"
+- LLM 重写为 3 个角度："RAG 定义"、"RAG 工作原理"、"RAG 应用场景"
+- 三个 query 分别检索，结果去重后合并</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>构建"法律文档智能问答"系统：
+- 上传合同/法规/判例 PDF
+- 检索时标注引用来源（文件名、页码、段落）
+- 识别并脱敏敏感信息（身份证号、银行卡号、手机号）
+- 提供"对比分析"功能：同时检索 2-3 份文档，输出异同点</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="10.html" class="nav-prev">← 第10章</a>
+                <a href="12.html" class="nav-next">第12章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

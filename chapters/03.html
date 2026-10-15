@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章 提示词工程与对话管理 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" class="active">第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="31">3.1 理论讲解</h3>
+<h4 id="311">3.1.1 提示词工程基础</h4>
+<ul>
+<li><strong>System Prompt</strong>：设定 AI 的角色、能力边界、输出格式</li>
+<li><strong>Few-Shot Prompting</strong>：通过示例引导模型输出</li>
+<li><strong>Chain-of-Thought</strong>：让模型逐步推理</li>
+<li><strong>Template 化</strong>：动态注入变量</li>
+</ul>
+<h4 id="312-chatsession">3.1.2 ChatSession 会话管理</h4>
+<p>Solon-AI 提供 <code>ChatSession</code> 接口，支持：</p>
+<ul>
+<li>会话生命周期管理（创建、销毁、过期）</li>
+<li>会话级上下文隔离</li>
+<li>持久化（Redis / 数据库）</li>
+</ul>
+<h3 id="32">3.2 实践练习</h3>
+<h4 id="1-template-prompt">练习1：动态 Template Prompt</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.chat.ChatModel;
+import org.noear.solon.ai.chat.ChatMessage;
+
+public class TemplatePrompt {
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        String template = &quot;你是一位{role}，请回答关于{topic}的问题。&quot;
+                + &quot;要求：{requirement}&quot;;
+
+        String prompt = template.replace(&quot;{role}&quot;, &quot;资深律师&quot;)
+                .replace(&quot;{topic}&quot;, &quot;劳动合同&quot;)
+                .replace(&quot;{requirement}&quot;, &quot;用通俗易懂的语言解释，避免专业术语&quot;);
+
+        String response = chatModel.prompt(prompt)
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(response);
+    }
+}
+</code></pre>
+
+<h4 id="2chatsession">练习2：会话管理（ChatSession）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.chat.session.ChatSession;
+import org.noear.solon.ai.chat.session.ChatSessionManager;
+
+public class SessionDemo {
+    public static void main(String[] args) {
+        ChatSessionManager sessionManager = ChatSessionManager.of(chatModel);
+
+        // 创建会话
+        ChatSession session = sessionManager.createSession(&quot;user_001&quot;);
+
+        // 发送消息（自动管理上下文）
+        String response1 = session.chat(&quot;我叫张三&quot;).getMessage().getContent();
+        String response2 = session.chat(&quot;我叫什么？&quot;).getMessage().getContent();
+
+        System.out.println(&quot;AI: &quot; + response2); // 应该记住&quot;张三&quot;
+    }
+}
+</code></pre>
+
+<h3 id="33">3.3 项目实战</h3>
+<p><strong>实战任务：Prompt 模板引擎</strong></p>
+<p>实现一个简单的 Prompt 模板引擎，支持：
+- 变量替换 <code>{variable}</code>
+- 条件渲染 <code>{#if condition}...{/if}</code>
+- 循环渲染 <code>{#each items}...{/each}</code></p>
+<hr />
+<h2 id="3">第3章 注意事项</h2>
+<ol>
+<li><strong>ChatSession 生命周期</strong>：默认 <code>ChatSession</code> 是<strong>内存级</strong>实现，应用重启后会话丢失；生产环境需接入 Redis 或数据库持久化。</li>
+<li><strong>变量名冲突</strong>：<code>String.replace()</code> 会替换所有匹配子串，若模板变量名存在包含关系（如 <code>{name}</code> 与 <code>{name_full}</code>），需先替换长变量名，再替换短变量名。</li>
+<li><strong>System Prompt 顺序</strong>：在 <code>List&lt;ChatMessage&gt;</code> 中，system 消息必须放在<strong>最前面</strong>，否则模型可能无法正确识别角色设定。</li>
+<li><strong>上下文窗口限制</strong>：不同模型 token 上限不同（如 qwen2.5 支持 128k），超出后会截断或抛出异常，需自行做消息裁剪或摘要。</li>
+<li><strong>ofUserAugment 引用长度</strong>：<code>ChatMessage.ofUserAugment()</code> 会将检索文档自动拼入 prompt，注意控制引用片段总长度，避免挤占模型推理空间。</li>
+</ol>
+<h2 id="3_1">第3章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>实现一个 <code>PromptTemplate</code> 工具类，支持以下功能：
+- <code>render(template, Map&lt;String, Object&gt; vars)</code>：变量替换
+- 当变量缺失时抛出 <code>IllegalArgumentException</code> 而非静默忽略</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>为模板引擎添加<strong>默认值语法</strong>：<code>{name:默认值}</code>，当变量 map 中不存在 <code>name</code> 时使用默认值；支持嵌套 Map 访问，如 <code>{user.name}</code>。</p>
+<h3 id="3_2">作业3：动手实践</h3>
+<p>实现一个带<strong>会话持久化</strong>的聊天服务：
+- 使用 Redis 存储 ChatSession（可借助 <code>solon-ai-harness</code> 中的 memory talent）
+- 提供 <code>POST /api/chat/session</code> 接口，参数包含 <code>sessionId</code>、<code>message</code>
+- 支持查看会话历史 <code>GET /api/chat/session/{sessionId}/history</code></p>
+<hr />
+            <div class="chapter-nav">
+                <a href="02.html" class="nav-prev">← 第2章</a>
+                <a href="04.html" class="nav-next">第4章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

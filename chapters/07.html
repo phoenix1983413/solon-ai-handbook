@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第7章 MCP 协议深度集成 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" class="active">第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="71">7.1 理论讲解</h3>
+<h4 id="711-mcp">7.1.1 MCP 协议简介</h4>
+<p><strong>Model Context Protocol (MCP)</strong> 是 Anthropic 提出的开放协议，用于：</p>
+<ul>
+<li>标准化 LLM 与外部工具的通信</li>
+<li>实现工具、资源、提示语的跨平台共享</li>
+<li>类似"AI 领域的 USB 接口"</li>
+</ul>
+<h4 id="712-mcp">7.1.2 MCP 核心概念</h4>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Tool</code></td>
+<td>可调用的函数（如：查询天气、执行 SQL）</td>
+</tr>
+<tr>
+<td><code>Resource</code></td>
+<td>可访问的资源（如：文件、数据库记录）</td>
+</tr>
+<tr>
+<td><code>Prompt</code></td>
+<td>预定义的提示词模板</td>
+</tr>
+<tr>
+<td><code>Transport</code></td>
+<td>传输层（stdio / SSE / Streamable HTTP）</td>
+</tr>
+</tbody>
+</table>
+<h4 id="713-solon-ai-mcp">7.1.3 Solon-AI 的 MCP 实现</h4>
+<pre class="codehilite"><code class="language-java">// 服务端：注解驱动
+@McpServerEndpoint(channel = McpChannel.STREAMABLE, mcpEndpoint = &quot;/mcp&quot;)
+public class MyMcpServer {
+    @ToolMapping(description = &quot;查询天气&quot;)
+    public String getWeather(@Param(description = &quot;城市&quot;) String location) {
+        return &quot;晴，25度&quot;;
+    }
+}
+
+// 客户端：Builder 模式
+McpClientProvider client = McpClientProvider.builder()
+        .channel(McpChannel.STREAMABLE)
+        .url(&quot;http://localhost:8080/mcp&quot;)
+        .build();
+</code></pre>
+
+<h3 id="72">7.2 实践练习</h3>
+<h4 id="1mcp-server">练习1：MCP Server</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.mcp.*;
+import org.noear.solon.ai.mcp.annotation.*;
+
+@McpServerEndpoint(channel = McpChannel.STREAMABLE, mcpEndpoint = &quot;/mcp&quot;)
+public class CalculatorMcpServer {
+
+    @ToolMapping(description = &quot;加法运算&quot;)
+    public String add(@Param(description = &quot;第一个数&quot;) Double a, 
+                      @Param(description = &quot;第二个数&quot;) Double b) {
+        return String.format(&quot;%.2f&quot;, a + b);
+    }
+
+    @ToolMapping(description = &quot;乘法运算&quot;)
+    public String multiply(@Param(description = &quot;第一个数&quot;) Double a, 
+                           @Param(description = &quot;第二个数&quot;) Double b) {
+        return String.format(&quot;%.2f&quot;, a * b);
+    }
+}
+</code></pre>
+
+<p><strong>启动类</strong>：</p>
+<pre class="codehilite"><code class="language-java">public class McpServerApp {
+    public static void main(String[] args) {
+        Solon.start(McpServerApp.class, args);
+    }
+}
+</code></pre>
+
+<p><strong>验证</strong>：</p>
+<pre class="codehilite"><code class="language-bash"># 使用 MCP Inspector 测试
+npx @modelcontextprotocol/inspector
+
+# 或使用 curl
+curl -X POST http://localhost:8080/mcp \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;jsonrpc&quot;:&quot;2.0&quot;,&quot;method&quot;:&quot;tools/call&quot;,&quot;params&quot;:{&quot;name&quot;:&quot;add&quot;,&quot;arguments&quot;:{&quot;a&quot;:1,&quot;b&quot;:2}}}'
+</code></pre>
+
+<h4 id="2mcp-client-agent">练习2：MCP Client 集成到 Agent</h4>
+<pre class="codehilite"><code class="language-java">public class McpAgentDemo {
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 1. 创建 MCP 客户端
+        McpClientProvider mcpClient = McpClientProvider.builder()
+                .channel(McpChannel.STREAMABLE)
+                .url(&quot;http://localhost:8080/mcp&quot;)
+                .build();
+
+        // 2. 将 MCP 工具注入 Agent
+        ReActAgent agent = ReActAgent.of(chatModel)
+                .name(&quot;math_agent&quot;)
+                .description(&quot;数学计算助手&quot;)
+                .mcpToolsAdd(mcpClient)  // 自动加载远程工具
+                .build();
+
+        // 3. 自然语言调用远程工具
+        String response = agent.prompt(&quot;帮我计算 123 乘以 456 等于多少？&quot;)
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(&quot;AI: &quot; + response);
+    }
+}
+</code></pre>
+
+<h3 id="73">7.3 项目实战</h3>
+<p><strong>实战任务：MCP 工具网关</strong></p>
+<p>实现一个 MCP 工具聚合网关，支持：
+- 注册多个 MCP Server
+- 统一鉴权（API Key）
+- 工具发现与自动调用
+- 调用日志与监控</p>
+<hr />
+<h2 id="7">第7章 注意事项</h2>
+<ol>
+<li><strong>MCP 端点路径唯一性</strong>：<code>@McpServerEndpoint</code> 的 <code>mcpEndpoint</code>（如 <code>/mcp</code>）在应用内必须唯一，多个 Server 重复注册会启动失败。</li>
+<li><strong>SSE 依赖</strong>：<code>McpChannel.STREAMABLE</code> 依赖 <code>solon-web-sse</code>，确保 pom 中已引入该模块，否则会报 <code>NoClassDefFoundError</code>。</li>
+<li><strong>参数描述即提示词</strong>：<code>@Param(description = "...")</code> 的内容会直接拼入工具描述传给 LLM，建议包含<strong>格式示例</strong>（如 <code>"city": "北京"</code>）。</li>
+<li><strong>Client 连接稳定性</strong>：远程 MCP Server 可能因网络抖动断开，建议为 <code>McpClientProvider</code> 配置超时和重试策略。</li>
+<li><strong>A2A 实验性质</strong>：<code>solon-ai-mcp</code> 中的 A2A（Agent-to-Agent）代码仍在实验室阶段，API 可能随时调整，不建议直接用于生产。</li>
+</ol>
+<h2 id="7_1">第7章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>独立部署一个 MCP Server（Solon），暴露两个工具：
+- <code>get_weather(city)</code>：返回模拟天气数据
+- <code>calculator(expression)</code>：执行数学表达式
+使用官方 <code>@modelcontextprotocol/inspector</code> 验证工具调用成功。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>实现<strong>工具链组合</strong>场景：
+- MCP Server 暴露 <code>get_city_coord(city)</code> 和 <code>weather_by_coord(lat, lon)</code>
+- 构建一个 Agent，用户问"北京天气怎么样"时，Agent 自动先调用 <code>get_city_coord</code>，再调用 <code>weather_by_coord</code></p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现一个简易 MCP <strong>工具注册中心</strong>：
+- 支持动态注册 MCP Server（URL、名称、描述）
+- 提供统一入口 <code>POST /api/mcp/tools/{serverName}/call</code>
+- 记录每次工具调用的请求参数、返回结果、耗时到数据库
+- 提供管理页面展示各 Server 的工具列表和最近调用记录</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="06.html" class="nav-prev">← 第6章</a>
+                <a href="08.html" class="nav-next">第8章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

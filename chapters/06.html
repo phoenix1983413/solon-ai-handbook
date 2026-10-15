@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章 Agent 智能体 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" class="active">第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="61">6.1 理论讲解</h3>
+<h4 id="611-agent">6.1.1 Agent 是什么？</h4>
+<p>Agent = LLM + 工具 + 记忆 + 规划</p>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│              Agent 核心循环               │
+│                                         │
+│  1. 感知（Perceive）                     │
+│     - 接收用户输入                       │
+│     - 检索相关记忆                       │
+│                                         │
+│  2. 推理（Reason）                       │
+│     - 分析当前状态                       │
+│     - 决定下一步动作                     │
+│                                         │
+│  3. 行动（Act）                          │
+│     - 调用工具                           │
+│     - 执行外部操作                       │
+│                                         │
+│  4. 观察（Observe）                      │
+│     - 收集工具返回结果                   │
+│     - 更新记忆                           │
+│                                         │
+│  5. 回到 2，直到任务完成                  │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h4 id="612-react">6.1.2 ReAct 模式</h4>
+<p><strong>ReAct</strong> = Reasoning（推理） + Acting（行动）</p>
+<pre class="codehilite"><code>思考：我需要查询北京天气
+行动：调用 get_weather(city=&quot;北京&quot;)
+观察：北京今天 25°C，晴
+思考：根据天气，我应该建议用户穿轻薄衣物
+行动：生成最终回答
+</code></pre>
+
+<h4 id="613-team-agent">6.1.3 Team Agent 协作协议</h4>
+<p>Solon-AI 提供 6 种预置协议：</p>
+<table>
+<thead>
+<tr>
+<th>协议</th>
+<th>说明</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>HIERARCHICAL</code></td>
+<td>层级式（Supervisor → Workers）</td>
+<td>复杂任务分解</td>
+</tr>
+<tr>
+<td><code>SEQUENTIAL</code></td>
+<td>顺序式（流水线）</td>
+<td>多阶段处理</td>
+</tr>
+<tr>
+<td><code>CONTRACT_NET</code></td>
+<td>合同网协议（招标-投标-中标）</td>
+<td>任务分发</td>
+</tr>
+<tr>
+<td><code>BLACKBOARD</code></td>
+<td>黑板式（共享黑板）</td>
+<td>数据汇聚分析</td>
+</tr>
+<tr>
+<td><code>RESILIENCE</code></td>
+<td>弹性式（故障转移）</td>
+<td>高可用场景</td>
+</tr>
+<tr>
+<td><code>CRITICAL_FIX</code></td>
+<td>关键修复式（快速响应）</td>
+<td>应急处理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 实践练习</h3>
+<h4 id="1react-agent">练习1：ReAct Agent</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.agent.*;
+import org.noear.solon.ai.agent.react.*;
+
+public class ReActAgentDemo {
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 创建 ReAct Agent
+        ReActAgent agent = ReActAgent.of(chatModel)
+                .name(&quot;weather_agent&quot;)
+                .description(&quot;天气查询助手&quot;)
+                .defaultToolAdd(WeatherToolDemo.weatherTool)  // 注入工具
+                .build();
+
+        // 自动完成：思考 -&gt; 调用工具 -&gt; 观察 -&gt; 总结
+        String response = agent.prompt(&quot;北京今天适合穿什么？&quot;)
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(&quot;AI: &quot; + response);
+    }
+}
+</code></pre>
+
+<h4 id="2team-agent">练习2：Team Agent（层级式）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.agent.team.*;
+
+public class TeamAgentDemo {
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 1. 创建子 Agent（文案专家）
+        Agent copywriter = Agent.create(chatModel, &quot;copywriter&quot;)
+                .description(&quot;文案撰写专家&quot;)
+                .toolAdd(new CopywritingTools())
+                .build();
+
+        // 2. 创建子 Agent（视觉专家）
+        Agent illustrator = Agent.create(chatModel, &quot;illustrator&quot;)
+                .description(&quot;视觉设计专家&quot;)
+                .toolAdd(new ImageGenerationTools())
+                .build();
+
+        // 3. 创建 Team Agent（Supervisor）
+        TeamAgent team = TeamAgent.of(chatModel)
+                .name(&quot;marketing_team&quot;)
+                .description(&quot;营销团队&quot;)
+                .protocol(TeamProtocols.HIERARCHICAL)  // 层级式
+                .agentAdd(copywriter)
+                .agentAdd(illustrator)
+                .build();
+
+        // 4. 提交任务（Supervisor 自动分解并分发）
+        String result = team.prompt(&quot;为深海矿泉水策划推广方案&quot;)
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(&quot;团队产出: &quot; + result);
+    }
+}
+</code></pre>
+
+<h3 id="63">6.3 项目实战</h3>
+<p><strong>实战任务：智能代码审查助手</strong></p>
+<p>实现一个基于 Agent 的代码审查系统：</p>
+<ul>
+<li><strong>Agent 1（静态分析）</strong>：检查代码风格、复杂度</li>
+<li><strong>Agent 2（安全扫描）</strong>：检测 SQL 注入、XSS 等漏洞</li>
+<li><strong>Agent 3（性能分析）</strong>：识别性能瓶颈</li>
+<li><strong>Supervisor</strong>：汇总报告，给出修复建议</li>
+</ul>
+<p><strong>核心代码</strong>：</p>
+<pre class="codehilite"><code class="language-java">public class CodeReviewSystem {
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 创建审查 Agent
+        Agent styleAgent = Agent.create(chatModel, &quot;style_checker&quot;)
+                .description(&quot;代码风格检查员&quot;)
+                .defaultToolAdd(new CodeStyleTool())
+                .build();
+
+        Agent securityAgent = Agent.create(chatModel, &quot;security_scanner&quot;)
+                .description(&quot;安全漏洞扫描员&quot;)
+                .defaultToolAdd(new SecurityScanTool())
+                .build();
+
+        Agent perfAgent = Agent.create(chatModel, &quot;performance_analyzer&quot;)
+                .description(&quot;性能分析员&quot;)
+                .defaultToolAdd(new PerfAnalyzeTool())
+                .build();
+
+        // 创建 Team
+        TeamAgent reviewTeam = TeamAgent.of(chatModel)
+                .name(&quot;code_review_team&quot;)
+                .protocol(TeamProtocols.SEQUENTIAL)
+                .agentAdd(styleAgent)
+                .agentAdd(securityAgent)
+                .agentAdd(perfAgent)
+                .build();
+
+        // 提交代码审查
+        String code = Files.readString(Path.of(&quot;UserService.java&quot;));
+        String report = reviewTeam.prompt(&quot;请审查以下 Java 代码：\n&quot; + code)
+                .call()
+                .getMessage()
+                .getContent();
+
+        System.out.println(report);
+    }
+}
+</code></pre>
+
+<hr />
+<h2 id="6">第6章 注意事项</h2>
+<ol>
+<li><strong>工具追加非覆盖</strong>：<code>defaultToolAdd()</code> 与 <code>options(op -&gt; op.toolAdd())</code> 是<strong>追加关系</strong>，同一 Agent 中多次添加会累积，注意避免重复注册同名工具。</li>
+<li><strong>protocol 不可变</strong>：<code>TeamAgent</code> 的 <code>protocol</code> 一旦 <code>build()</code> 后不可更改，创建时需谨慎选择，调试阶段建议先用 <code>SEQUENTIAL</code>。</li>
+<li><strong>Supervisor 汇总模式</strong>：默认 <code>HIERARCHICAL</code> 协议下，子 Agent 的执行结果由 Supervisor <strong>汇总整理</strong>后返回，不会直接透传原始输出。</li>
+<li><strong>协议选择建议</strong>：<code>HIERARCHICAL</code> 最通用；<code>BLACKBOARD</code> 和 <code>CONTRACT_NET</code> 调试成本高，建议在掌握基础后再深入。</li>
+<li><strong>TeamAgent 调试策略</strong>：先拆分为独立 Agent 单测通过，再组合为 Team；遇到异常时先关闭 <code>Human-in-the-Loop</code>，确认逻辑正确后再开启。</li>
+</ol>
+<h2 id="6_1">第6章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>构建一个"数学 tutors Team"：
+- Agent 1（出题员）：根据年级和知识点生成练习题
+- Agent 2（批改员）：检查答案并给出评分和解析
+使用 <code>SEQUENTIAL</code> 协议，实现"出题 → 作答 → 批改"流水线。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>使用 <code>HIERARCHICAL</code> 协议实现"内容创作团队"：
+- Supervisor：接收任务"写一篇关于 RAG 的技术博客"
+- Worker 1（调研员）：搜索 RAG 最新进展和案例
+- Worker 2（撰稿人）：根据调研结果撰写初稿
+- Worker 3（编辑）：润色、排版、生成标题</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现一个带 <strong>Human-in-the-Loop</strong> 的合同审批 Agent：
+- Agent 自动分析合同风险等级（低/中/高）
+- 当风险等级为"高"时，触发人工审批流程
+- 用户可通过控制台输入"批准"/"驳回"及修改意见
+- Agent 根据审批结果生成最终合同修订建议</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="05.html" class="nav-prev">← 第5章</a>
+                <a href="07.html" class="nav-next">第7章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

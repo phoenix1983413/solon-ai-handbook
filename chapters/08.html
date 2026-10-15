@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第8章 AI Flow 低代码编排 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" class="active">第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="81">8.1 理论讲解</h3>
+<h4 id="811-ai-flow">8.1.1 什么是 AI Flow？</h4>
+<p>AI Flow 是 <strong>YAML 驱动的低代码编排引擎</strong>，将复杂的 AI 应用流程配置化：</p>
+<pre class="codehilite"><code class="language-yaml">id: customer_service_flow
+layout:
+  - type: &quot;start&quot;
+  - task: &quot;@VarInput&quot;
+    meta:
+      message: &quot;请输入您的问题&quot;
+  - task: &quot;@EmbeddingModel&quot;
+    meta:
+      provider: &quot;ollama&quot;
+      model: &quot;bge-m3&quot;
+  - task: &quot;@InMemoryRepository&quot;
+    meta:
+      query: &quot;${input}&quot;
+      topK: 5
+  - task: &quot;@ChatModel&quot;
+    meta:
+      systemPrompt: &quot;你是一个客服助手&quot;
+      provider: &quot;ollama&quot;
+      model: &quot;qwen2.5:1.5b&quot;
+  - task: &quot;@ConsoleOutput&quot;
+</code></pre>
+
+<h4 id="812">8.1.2 内置组件</h4>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@VarInput</code></td>
+<td>变量输入</td>
+<td>用户输入</td>
+</tr>
+<tr>
+<td><code>@EmbeddingModel</code></td>
+<td>向量化</td>
+<td>文本嵌入</td>
+</tr>
+<tr>
+<td><code>@InMemoryRepository</code></td>
+<td>内存知识库检索</td>
+<td>RAG 检索</td>
+</tr>
+<tr>
+<td><code>@ChatModel</code></td>
+<td>模型调用</td>
+<td>LLM 生成</td>
+</tr>
+<tr>
+<td><code>@ConsoleOutput</code></td>
+<td>控制台输出</td>
+<td>结果展示</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82">8.2 实践练习</h3>
+<h4 id="1-qa-flow">练习1：简单 QA Flow</h4>
+<pre class="codehilite"><code class="language-yaml"># file: qa-flow.yml
+id: simple_qa
+layout:
+  - type: &quot;start&quot;
+  - task: &quot;@VarInput&quot;
+    meta:
+      message: &quot;请输入问题：&quot;
+      varName: &quot;query&quot;
+  - task: &quot;@EmbeddingModel&quot;
+    meta:
+      provider: &quot;ollama&quot;
+      model: &quot;bge-m3&quot;
+      apiUrl: &quot;http://127.0.0.1:11434/api/embed&quot;
+  - task: &quot;@InMemoryRepository&quot;
+    meta:
+      query: &quot;${query}&quot;
+      topK: 3
+      splitPipeline:
+        - &quot;org.noear.solon.ai.rag.splitter.RegexTextSplitter&quot;
+        - &quot;org.noear.solon.ai.rag.splitter.TokenSizeTextSplitter&quot;
+  - task: &quot;@ChatModel&quot;
+    meta:
+      systemPrompt: &quot;你是一个知识库助手&quot;
+      stream: false
+      chatConfig:
+        provider: &quot;ollama&quot;
+        model: &quot;qwen2.5:1.5b&quot;
+        apiUrl: &quot;http://127.0.0.1:11434/api/chat&quot;
+  - task: &quot;@ConsoleOutput&quot;
+    meta:
+      message: &quot;回答：${output}&quot;
+</code></pre>
+
+<p><strong>Java 调用</strong>：</p>
+<pre class="codehilite"><code class="language-java">FlowEngine flowEngine = FlowEngine.newInstance();
+flowEngine.eval(&quot;simple_qa&quot;);
+</code></pre>
+
+<h3 id="83">8.3 项目实战</h3>
+<p><strong>实战任务：智能工单处理流程</strong></p>
+<p>设计一个工单处理 Flow：</p>
+<pre class="codehilite"><code>用户输入 -&gt; 分类（问题/投诉/建议）-&gt; 知识库检索 -&gt; LLM 生成回复 -&gt; 人工审核 -&gt; 发送通知
+</code></pre>
+
+<hr />
+<h2 id="8">第8章 注意事项</h2>
+<ol>
+<li><strong>Task 组件必须注册</strong>：YAML 中的 <code>task</code>（如 <code>@ChatModel</code>、<code>@InMemoryRepository</code>）必须是 Flow 引擎已注册的组件类名，否则会报 <code>ComponentNotFoundException</code>。</li>
+<li><strong>变量作用域</strong>：<code>${variable}</code> 引用必须确保前序任务已定义该变量，否则解析为 <code>null</code> 或空字符串，建议使用 <code>@VarOutput</code> 显式声明输出。</li>
+<li><strong>FlowEngine 线程安全</strong>：默认 <code>FlowEngine.newInstance()</code> 为单例，若多线程并发执行同一 Flow，注意检查共享状态是否安全。</li>
+<li><strong>splitPipeline 顺序执行</strong>：切分管道中的多个 Splitter 是<strong>链式顺序执行</strong>，后一个接收前一个的输出，不是并行处理。</li>
+<li><strong>复杂逻辑慎写 YAML</strong>：条件分支超过 3 层时，建议封装为自定义 <code>Task</code> 组件，避免在 YAML 中堆积复杂 SpEL 表达式。</li>
+</ol>
+<h2 id="8_1">第8章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>编写一个完整的"问答 Flow"（YAML + Java 调用），流程如下：</p>
+<pre class="codehilite"><code>VarInput → EmbeddingModel → InMemoryRepository → ChatModel → ConsoleOutput
+</code></pre>
+
+<p>要求：知识库来源为本地 <code>README.md</code> 文件。</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>在 Flow 中添加 <strong>条件分支</strong>：
+- 使用 <code>@IfElse</code> 组件判断检索结果的最高相似度
+- 相似度 &gt; 0.7：进入 <code>@ChatModel</code> 生成回答
+- 相似度 &lt;= 0.7：输出"知识库暂无答案，请联系人工客服"</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现一个"多轮对话 Flow"：
+- 使用 <code>@ChatModel</code> 的 <code>stream: true</code> 开启流式
+- 通过 <code>@SessionVar</code> 保存对话历史（最多 5 轮）
+- 流式输出过程中实时显示 <code>[token: xxx]</code> 计数</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="07.html" class="nav-prev">← 第7章</a>
+                <a href="09.html" class="nav-next">第9章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

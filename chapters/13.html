@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第13章 综合项目实战：智能客服平台 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" >第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" class="active">第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="131">13.1 项目需求</h3>
+<p>构建一个完整的智能客服平台，整合前面所有知识点：</p>
+<p><strong>功能模块</strong>：
+1. <strong>用户管理</strong>：用户注册、登录、会话管理
+2. <strong>知识库管理</strong>：文档上传、切分、向量化
+3. <strong>智能问答</strong>：RAG + Agent 混合问答
+4. <strong>工单系统</strong>：自动创建、分配、流转
+5. <strong>数据分析</strong>：问答质量评估、热点问题统计</p>
+<h3 id="132">13.2 技术架构</h3>
+<pre class="codehilite"><code>┌─────────────────────────────────────────┐
+│             前端层 (Vue/React)           │
+└─────────────────────────────────────────┘
+                    ↓ HTTP/WebSocket
+┌─────────────────────────────────────────┐
+│           Solon-AI 应用层               │
+│  ┌──────────┐  ┌──────────┐             │
+│  │  Chat API │  │ Admin API│             │
+│  └──────────┘  └──────────┘             │
+│  ┌──────────────────────────┐           │
+│  │     AI Flow Engine       │           │
+│  └──────────────────────────┘           │
+│  ┌──────────┐  ┌──────────┐             │
+│  │  Agent   │  │   MCP    │             │
+│  │  Team    │  │ Gateway  │             │
+│  └──────────┘  └──────────┘             │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           数据层                         │
+│  PostgreSQL + pgvector │ Redis │ ES     │
+└─────────────────────────────────────────┘
+                    ↓
+┌─────────────────────────────────────────┐
+│           模型层                         │
+│  Ollama (Qwen2.5) │ bge-m3             │
+└─────────────────────────────────────────┘
+</code></pre>
+
+<h3 id="133">13.3 核心代码示例</h3>
+<h4 id="1rag">模块1：RAG 检索服务</h4>
+<pre class="codehilite"><code class="language-java">@Controller
+public class KnowledgeController {
+    private final PgVectorRepository repository;
+    private final ChatModel chatModel;
+
+    @Inject
+    public KnowledgeController(PgVectorRepository repository, ChatModel chatModel) {
+        this.repository = repository;
+        this.chatModel = chatModel;
+    }
+
+    @Post(&quot;/api/chat&quot;)
+    public ChatResponse chat(@Body ChatRequest request) {
+        // 1. 检索相关知识
+        List&lt;Document&gt; docs = repository.search(request.getQuery(), 5);
+
+        // 2. 构造增强 Prompt
+        ChatMessage message = ChatMessage.ofUserAugment(request.getQuery(), docs);
+
+        // 3. 调用 LLM
+        return chatModel.prompt(message)
+                .system(&quot;你是智能客服助手，请基于知识库回答用户问题。&quot;)
+                .call();
+    }
+}
+</code></pre>
+
+<h4 id="2-agent">模块2：工单 Agent</h4>
+<pre class="codehilite"><code class="language-java">public class TicketAgent {
+    private final TeamAgent ticketTeam;
+
+    public TicketAgent(ChatModel chatModel) {
+        this.ticketTeam = TeamAgent.of(chatModel)
+                .name(&quot;ticket_team&quot;)
+                .protocol(TeamProtocols.HIERARCHICAL)
+                .agentAdd(new ClassifyAgent())
+                .agentAdd(new AssignAgent())
+                .agentAdd(new ResponseAgent())
+                .build();
+    }
+
+    public TicketResult process(String userQuery) {
+        String result = ticketTeam.prompt(&quot;处理工单：&quot; + userQuery)
+                .call()
+                .getMessage()
+                .getContent();
+
+        return JsonUtil.parse(result, TicketResult.class);
+    }
+}
+</code></pre>
+
+<h4 id="3ai-flow">模块3：AI Flow 工单流程</h4>
+<pre class="codehilite"><code class="language-yaml"># ticket-flow.yml
+id: ticket_processing
+layout:
+  - type: &quot;start&quot;
+  - task: &quot;@VarInput&quot;
+    meta:
+      message: &quot;请输入工单内容&quot;
+      varName: &quot;ticket_content&quot;
+  - task: &quot;@ChatModel&quot;
+    meta:
+      systemPrompt: &quot;你是工单分类专家，请判断工单类型（技术问题/业务咨询/投诉）&quot;
+      model: &quot;qwen2.5:1.5b&quot;
+  - task: &quot;@IfElse&quot;
+    meta:
+      condition: &quot;${output} == '技术问题'&quot;
+      then:
+        - task: &quot;@ChatModel&quot;
+          meta:
+            systemPrompt: &quot;你是技术支持，请提供解决方案&quot;
+      else:
+        - task: &quot;@ChatModel&quot;
+          meta:
+            systemPrompt: &quot;你是客服，请礼貌回复&quot;
+  - task: &quot;@ConsoleOutput&quot;
+</code></pre>
+
+<h3 id="134">13.4 部署方案</h3>
+<pre class="codehilite"><code class="language-yaml"># docker-compose.yml
+version: '3.8'
+services:
+  app:
+    image: your-company/smart-cs:latest
+    ports:
+      - &quot;8080:8080&quot;
+    environment:
+      - SOLON_AI_CHAT_DEFAULT_PROVIDER=ollama
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pg:5432/cs_db
+    depends_on:
+      - pg
+      - ollama
+
+  pg:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cs_db
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ./models:/root/.ollama
+    command: serve
+</code></pre>
+
+<hr />
+<h2 id="13">第13章 注意事项</h2>
+<ol>
+<li><strong>综合项目前置依赖</strong>：本章是前 12 章知识点的整合，建议<strong>逐章完成练习后再开始</strong>，跳章会导致知识点缺口难以衔接。</li>
+<li><strong>混合问答策略</strong>：智能客服优先走 <strong>RAG 检索</strong> → 无答案再触发 <strong>Agent 深度检索</strong> → 仍无答案转<strong>人工工单</strong>，三层递进。</li>
+<li><strong>工单时间线持久化</strong>：工单流转记录（创建、分配、回复、关闭）建议存入 PostgreSQL <code>jsonb</code> 字段，便于回溯和审计。</li>
+<li><strong>数据分析不要自造轮子</strong>：问答质量评估、热点统计建议直接接入 <strong>ELK</strong> 或 <strong>Prometheus</strong>，重复造轮子性价比极低。</li>
+<li><strong>Docker 部署注意</strong>：<code>depends_on</code> 仅保证容器启动顺序，不保证服务就绪；建议在 App 启动脚本中增加健康检查（<code>pg_isready</code>、<code>curl ollama:11434</code>）。</li>
+</ol>
+<h2 id="13_1">第13章 实战作业</h2>
+<h3 id="1">作业1：基础巩固</h3>
+<p>完成智能客服平台的<strong>最小可行版本（MVP）</strong>：
+- 用户通过 <code>POST /api/chat</code> 提问
+- 后端优先查询 PgVector 知识库
+- 有答案则返回，无答案则返回固定话术
+- 前端使用 Vue/React 实现简单对话界面</p>
+<h3 id="2">作业2：拓展应用</h3>
+<p>在 MVP 基础上添加<strong>工单系统</strong>：
+- 当 RAG 无答案时，自动创建工单（类型：技术问题/业务咨询/投诉）
+- 使用 TeamAgent（<code>ClassifyAgent</code> → <code>AssignAgent</code> → <code>ResponseAgent</code>）自动处理
+- 工单状态流转：待分配 → 处理中 → 已解决 → 已关闭</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>完整部署智能客服平台到 Docker Compose：
+- 服务清单：App、PostgreSQL+pgvector、Ollama、Redis、Prometheus+Grafana
+- 配置健康检查脚本，确保依赖服务就绪后再启动 App
+- 接入日志收集（stdout → Loki 或 ELK），实现全链路追踪
+- 编写 <code>README.md</code>，记录启动步骤、端口映射、默认账号密码</p>
+<hr />
+<h2 id="_1">📖 附录</h2>
+<h3 id="a-faq">附录A：常见问题 FAQ</h3>
+<p><strong>Q1: Solon-AI 和 LangChain4j 有什么区别？</strong></p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Solon-AI</th>
+<th>LangChain4j</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>框架依赖</td>
+<td>Solon（轻量）</td>
+<td>Spring Boot（较重）</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>✅ ReAct + Team + Graph</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>✅ 原生支持</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Flow 编排</td>
+<td>✅ YAML</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Talents</td>
+<td>✅ 17 个预置</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>社区活跃度</td>
+<td>中等（国内）</td>
+<td>高（国际）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Q2: 如何选择向量数据库？</strong></p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>学习/原型</td>
+<td>InMemory / Redis</td>
+<td>零配置</td>
+</tr>
+<tr>
+<td>中小规模</td>
+<td>pgvector</td>
+<td>PostgreSQL 生态</td>
+</tr>
+<tr>
+<td>大规模（千万级）</td>
+<td>Milvus / Qdrant</td>
+<td>高性能</td>
+</tr>
+<tr>
+<td>已有 ES</td>
+<td>OpenSearch / ES</td>
+<td>统一技术栈</td>
+</tr>
+<tr>
+<td>云服务</td>
+<td>DashVector / TCVectorDB</td>
+<td>免运维</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Q3: Ollama 适合生产环境吗？</strong></p>
+<ul>
+<li>✅ 适合：小团队、内部工具、原型验证</li>
+<li>❌ 不适合：高并发、企业级 SLA</li>
+<li>替代方案：vLLM、TGI、DeepSeek 官方 API</li>
+</ul>
+<h3 id="b">附录B：学习资源</h3>
+<ul>
+<li><strong>官方文档</strong>：https://solon.noear.org/article/learn-solon-ai</li>
+<li><strong>GitHub</strong>：https://github.com/opensolon/solon-ai</li>
+<li><strong>示例项目</strong>：https://github.com/solonlab/solon-ai-mcp-embedded-examples</li>
+<li><strong>SolonCode（Claude Code Java 版）</strong>：https://github.com/opensolon/soloncode</li>
+</ul>
+<h3 id="c">附录C：推荐学习顺序</h3>
+<pre class="codehilite"><code>Week 1: 第1-2章（基础 + ChatModel）
+Week 2: 第3-4章（Prompt + Tool）
+Week 3: 第5章（RAG） + 第6章（Agent）
+Week 4: 第7章（MCP） + 第8章（Flow）
+Week 5: 第9章（Talents） + 第10章（多 Agent）
+Week 6: 第11-13章（企业级 RAG + MCP 网关 + 综合项目）
+</code></pre>
+
+<hr />
+<h2 id="_2">总结</h2>
+<p>通过本指南，你将掌握：</p>
+<ol>
+<li><strong>基础能力</strong>：ChatModel 调用、Prompt 工程、Tool 开发</li>
+<li><strong>核心能力</strong>：RAG 全链路、ReAct/Team Agent、MCP 协议</li>
+<li><strong>高级能力</strong>：AI Flow 编排、多智能体协作、企业级架构设计</li>
+</ol>
+<p><strong>下一步行动</strong>：
+1. 克隆 solon-ai 仓库
+2. 搭建 Ollama 环境（<code>ollama pull qwen2.5:1.5b</code>）
+3. 从第1章开始，逐章完成练习
+4. 第13章完成综合项目，构建你的作品集</p>
+<hr />
+<blockquote>
+<p><strong>学习建议</strong>：
+- 代码必须亲手敲，不要复制粘贴
+- 每个练习尝试 2-3 种变体
+- 遇到问题先看测试用例（<code>src/test/java</code>）
+- 加入 Solon 社区（Gitee/GitHub Discussions）</p>
+</blockquote>
+            <div class="chapter-nav">
+                <a href="12.html" class="nav-prev">← 第12章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

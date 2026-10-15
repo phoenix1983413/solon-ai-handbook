@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第2章 ChatModel 与 LLM 调用 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览</a></li>
+                    <li><a href="02.html" class="active">第2章 ChatModel</a></li>
+                    <li><a href="03.html" >第3章 提示词工程</a></li>
+                    <li><a href="04.html" >第4章 工具基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG</a></li>
+                    <li><a href="06.html" >第6章 Agent</a></li>
+                    <li><a href="07.html" >第7章 MCP</a></li>
+                    <li><a href="08.html" >第8章 Flow</a></li>
+                    <li><a href="09.html" >第9章 Talents</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多Agent</a></li>
+                    <li><a href="11.html" >第11章 企业RAG</a></li>
+                    <li><a href="12.html" >第12章 MCP网关</a></li>
+                    <li><a href="13.html" >第13章 综合实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="21">2.1 理论讲解</h3>
+<h4 id="211-chatmodel">2.1.1 ChatModel 统一抽象</h4>
+<p>Solon-AI 的核心是 <strong>ChatModel</strong>，它提供了：</p>
+<ul>
+<li><strong>统一接口</strong>：无论底层是 OpenAI、Ollama 还是 DeepSeek，调用方式一致</li>
+<li><strong>方言适配</strong>：通过 <code>provider</code> 指定供应商，框架自动处理协议差异</li>
+<li><strong>响应式支持</strong>：同步 <code>call()</code> 和响应式 <code>stream()</code> 两种模式</li>
+</ul>
+<h4 id="212">2.1.2 核心概念</h4>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ChatModel</code></td>
+<td>LLM 客户端入口</td>
+<td><code>ChatModel.of(url).provider("ollama").build()</code></td>
+</tr>
+<tr>
+<td><code>ChatMessage</code></td>
+<td>消息封装（System/User/Assistant）</td>
+<td><code>ChatMessage.ofUser("你好")</code></td>
+</tr>
+<tr>
+<td><code>ChatResponse</code></td>
+<td>响应结果（包含消息、usage、finishReason）</td>
+<td><code>response.getMessage()</code></td>
+</tr>
+<tr>
+<td><code>ChatOptions</code></td>
+<td>调用选项（temperature、tools、talents）</td>
+<td><code>.options(op -&gt; op.temperature(0.7))</code></td>
+</tr>
+<tr>
+<td><code>Prompt</code></td>
+<td>提示词构建器</td>
+<td><code>chatModel.prompt("hello")</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="213-reactive">2.1.3 流式调用（Reactive）</h4>
+<pre class="codehilite"><code class="language-java">// 流式调用返回 Flux&lt;ChatEvent&gt;
+Flux&lt;ChatEvent&gt; flux = chatModel.prompt(&quot;讲个故事&quot;)
+        .stream();
+
+// 订阅事件
+flux.subscribe(event -&gt; {
+    if (event instanceof ChatEventContent) {
+        System.out.print(((ChatEventContent) event).getContent());
+    }
+});
+</code></pre>
+
+<h3 id="22">2.2 实践练习</h3>
+<h4 id="1">练习1：多轮对话（带上下文）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.chat.ChatModel;
+import org.noear.solon.ai.chat.ChatMessage;
+import org.noear.solon.ai.chat.ChatResponse;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MultiTurnChat {
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 1. 维护对话历史
+        List&lt;ChatMessage&gt; history = new ArrayList&lt;&gt;();
+
+        // 第一轮
+        ChatMessage user1 = ChatMessage.ofUser(&quot;我叫小明，是一名 Java 工程师&quot;);
+        ChatMessage assistant1 = chatModel.prompt(user1).call().getMessage();
+        history.add(user1);
+        history.add(assistant1);
+
+        System.out.println(&quot;AI: &quot; + assistant1.getContent());
+
+        // 第二轮（测试记忆）
+        ChatMessage user2 = ChatMessage.ofUser(&quot;我叫什么名字？我是做什么的？&quot;);
+        ChatResponse response2 = chatModel.prompt(user2)
+                .options(op -&gt; op.chatMessages(history))
+                .call();
+
+        System.out.println(&quot;AI: &quot; + response2.getMessage().getContent());
+    }
+}
+</code></pre>
+
+<h4 id="2system-prompt">练习2：System Prompt 与参数调优</h4>
+<pre class="codehilite"><code class="language-java">ChatResponse response = chatModel.prompt(&quot;推荐一本适合 Java 工程师的 AI 书籍&quot;)
+        .system(&quot;你是一位资深的技术图书编辑，擅长推荐高质量的技术书籍。&quot;
+                + &quot;推荐时请说明理由，并标注难度等级（入门/进阶/专家）。&quot;)
+        .options(op -&gt; {
+            op.temperature(0.7);      // 创造性：0-1
+            op.topP(0.9);             // 核采样
+            op.maxTokens(500);        // 最大生成长度
+            op.stop(Arrays.asList(&quot;END&quot;));  // 停止词
+        })
+        .call();
+</code></pre>
+
+<h4 id="3function-calling">练习3：函数调用（Function Calling）</h4>
+<pre class="codehilite"><code class="language-java">import org.noear.solon.ai.chat.tool.ToolProvider;
+import org.noear.solon.ai.chat.tool.ToolExecutable;
+
+public class FunctionCallingDemo {
+
+    // 定义工具
+    static ToolProvider weatherTool = ToolProvider.of(&quot;get_weather&quot;)
+            .description(&quot;获取指定城市的天气信息&quot;)
+            .param(&quot;city&quot;, String.class, &quot;城市名称&quot;, true)
+            .executable((ToolExecutable) args -&gt; {
+                String city = args.getString(&quot;city&quot;);
+                return &quot;{\&quot;city\&quot;:\&quot;&quot; + city + &quot;\&quot;,\&quot;temp\&quot;:25,\&quot;weather\&quot;:\&quot;晴\&quot;}&quot;;
+            });
+
+    public static void main(String[] args) {
+        ChatModel chatModel = ChatModel.of(&quot;http://127.0.0.1:11434/api/chat&quot;)
+                .provider(&quot;ollama&quot;)
+                .model(&quot;qwen2.5:1.5b&quot;)
+                .build();
+
+        // 注入工具
+        ChatResponse response = chatModel.prompt(&quot;北京今天天气怎么样？&quot;)
+                .options(op -&gt; op.toolAdd(weatherTool))
+                .call();
+
+        System.out.println(response.getMessage());
+        System.out.println(&quot;工具调用: &quot; + response.getToolCalls());
+    }
+}
+</code></pre>
+
+<h3 id="23">2.3 项目实战</h3>
+<p><strong>实战任务：智能问答机器人</strong></p>
+<p>实现一个命令行智能问答机器人，具备以下功能：
+- 多轮对话记忆（最近 10 轮）
+- 支持 System Prompt 切换（助手模式/专家模式/创意模式）
+- 温度参数动态调整
+- 对话历史持久化到文件</p>
+<p><strong>核心代码骨架</strong>：</p>
+<pre class="codehilite"><code class="language-java">public class QABot {
+    private final ChatModel chatModel;
+    private final List&lt;ChatMessage&gt; history = new ArrayList&lt;&gt;();
+    private final int MAX_HISTORY = 10;
+
+    public QABot(ChatModel chatModel) {
+        this.chatModel = chatModel;
+    }
+
+    public String chat(String userInput, String mode) {
+        // 1. 根据模式选择 System Prompt
+        String systemPrompt = getSystemPrompt(mode);
+
+        // 2. 构建消息列表
+        List&lt;ChatMessage&gt; messages = new ArrayList&lt;&gt;();
+        messages.add(ChatMessage.ofSystem(systemPrompt));
+        messages.addAll(history);
+        messages.add(ChatMessage.ofUser(userInput));
+
+        // 3. 调用模型
+        ChatResponse response = chatModel.prompt(messages)
+                .options(op -&gt; op.temperature(getTemperature(mode)))
+                .call();
+
+        // 4. 更新历史
+        updateHistory(userInput, response.getMessage());
+
+        return response.getMessage().getContent();
+    }
+
+    private void updateHistory(String userInput, ChatMessage assistantMsg) {
+        history.add(ChatMessage.ofUser(userInput));
+        history.add(assistantMsg);
+
+        // 保持最近 10 轮
+        while (history.size() &gt; MAX_HISTORY * 2) {
+            history.remove(0);
+        }
+    }
+}
+</code></pre>
+
+<hr />
+<h2 id="2">第2章 注意事项</h2>
+<ol>
+<li><strong>无状态调用</strong>：<code>ChatModel</code> 本身<strong>不保存对话历史</strong>，多轮对话必须手动维护 <code>List&lt;ChatMessage&gt;</code> 并传入。</li>
+<li><strong>流式事件类型</strong>：<code>stream()</code> 返回 <code>Flux&lt;ChatEvent&gt;</code>，常见子类型有 <code>ChatEventContent</code>（文本片段）、<code>ChatEventThinking</code>（推理过程）、<code>ChatEventError</code>（错误），需逐一判断处理。</li>
+<li><strong>System Prompt 覆盖</strong>：<code>system()</code> 方法不会追加，而是<strong>替换</strong>已有的 system 消息；多次调用只有最后一次生效。</li>
+<li><strong>maxTokens 非硬上限</strong>：部分模型（如 DeepSeek-R1 的思维链）可能超出 <code>maxTokens</code> 限制，需结合 <code>finishReason</code> 判断是否真正截断。</li>
+<li><strong>Function Calling 模型门槛</strong>：并非所有模型都支持工具调用，<code>qwen2.5:1.5b</code> 支持较好，但 0.5b 等极小参数模型工具调用准确率显著下降。</li>
+</ol>
+<h2 id="2_1">第2章 实战作业</h2>
+<h3 id="1_1">作业1：基础巩固</h3>
+<p>基于"多轮对话"示例，实现一个命令行聊天工具，支持以下命令：
+- <code>/clear</code>：清空对话历史
+- <code>/history</code>：打印当前对话历史（User/Assistant 交替）
+- <code>/save &lt;file&gt;</code>：将历史保存到 Markdown 文件</p>
+<h3 id="2_2">作业2：拓展应用</h3>
+<p>为多轮对话添加<strong>滑动窗口策略</strong>：
+- 配置 <code>MAX_HISTORY_ROUNDS = 5</code>
+- 只保留最近 5 轮（10 条消息），超出部分自动丢弃
+- 在丢弃前将旧消息摘要为一段文本，插入到 system prompt 中，实现"长期记忆压缩"</p>
+<h3 id="3">作业3：动手实践</h3>
+<p>实现一个支持 stream / non-stream 双模式的命令行聊天工具：
+- 默认非 stream 模式，整段输出
+- 输入 <code>:stream</code> 切换为流式模式，逐字打印
+- 流式模式下实时显示 token 计数和耗时
+- 将每次对话记录追加到 <code>chat-log.jsonl</code></p>
+<hr />
+            <div class="chapter-nav">
+                <a href="01.html" class="nav-prev">← 第1章</a>
+                <a href="03.html" class="nav-next">第3章 →</a>
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>
