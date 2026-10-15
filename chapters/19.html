@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第19章 面向公共安全领域的垂直大模型与行业智能体 - Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <style>
+        .chapter-header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 48px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+        }
+        .chapter-header h1 {
+            color: white;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .chapter-meta {
+            display: flex;
+            gap: 24px;
+            margin-top: 16px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .chapter-nav {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+        }
+        .chapter-nav a {
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .chapter-nav a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        .nav-prev { text-align: left; }
+        .nav-next { text-align: right; }
+    </style>
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段</h3>
+                <ul>
+                    <li><a href="01.html" >第1章 框架概览与环境搭建</a></li>
+                    <li><a href="02.html" >第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="03.html" >第3章 提示词工程与对话管理</a></li>
+                    <li><a href="04.html" >第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第二阶段</h3>
+                <ul>
+                    <li><a href="05.html" >第5章 RAG 知识库全链路</a></li>
+                    <li><a href="06.html" >第6章 Agent 智能体</a></li>
+                    <li><a href="07.html" >第7章 MCP 协议深度集成</a></li>
+                    <li><a href="08.html" >第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="09.html" >第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第三阶段</h3>
+                <ul>
+                    <li><a href="10.html" >第10章 多智能体协作系统</a></li>
+                    <li><a href="11.html" >第11章 企业级 RAG 应用</a></li>
+                    <li><a href="12.html" >第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="13.html" >第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第四阶段</h3>
+                <ul>
+                    <li><a href="14.html" >第14章 企业知识库与智能文档处理平台</a></li>
+                    <li><a href="15.html" >第15章 代码智能助手与研发效能平台</a></li>
+                    <li><a href="16.html" >第16章 数据智能分析与决策支持系统</a></li>
+                    <li><a href="17.html" >第17章 IoT/智能硬件监控与诊断平台</a></li>
+                    <li><a href="18.html" >第18章 GIS空间数据智能分析平台</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第五阶段</h3>
+                <ul>
+                    <li><a href="19.html" class="active">第19章 面向公共安全领域的垂直大模型与行业智能体</a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer">
+            <p><a href="../index.html" style="color: inherit;">← 返回首页</a></p>
+        </div>
+    </aside>
+    <main class="main-content">
+        <div class="content-wrapper">
+            <h3 id="191">19.1 理论讲解</h3>
+<h4 id="1911">19.1.1 项目概述</h4>
+<p>面向公共安全领域的垂直大模型与行业智能体，融合警务大模型、技战法工厂、六维标签、时空计算、智能体编排等核心引擎。基于全域任务编排、可信数据协同、虚实融合训推、战法技能生产四大核心技术，具备业务系统操作接口，可直接转化为可执行指令，实现从"咨询问答"到"业务闭环"的跨越。</p>
+<h4 id="1912">19.1.2 核心能力</h4>
+<p><strong>1. 警务大模型引擎</strong>
+- 基于 Solon-AI 的 ChatModel 能力，构建警务垂直领域大模型
+- 支持多轮对话、上下文记忆、意图识别
+- 集成 DeepSeek、Qwen 等国产大模型，满足等保要求</p>
+<p><strong>2. 技战法工厂</strong>
+- 将民警实战经验抽象为可复用的"技战法"Skill
+- 支持可视化编排、版本管理、效果评估
+- 基于 Solon-AI 的 Talents 能力插件体系扩展</p>
+<p><strong>3. 六维标签体系</strong>
+- 人员标签：身份、行为、关系、风险、轨迹、资产
+- 基于 RAG 知识库 + 向量化实现智能标签推理
+- 支持标签动态更新、血缘追溯</p>
+<p><strong>4. 时空计算引擎</strong>
+- 集成 PostGIS + 时空轨迹存储
+- 支持时空范围查询、路径分析、热点发现
+- 基于 Solon-AI Flow 实现复杂的时空计算编排</p>
+<p><strong>5. 智能体编排系统</strong>
+- 基于 Solon-AI 的 Agent + Team Agent 能力
+- 支持多智能体协作（分析 agent、预警 agent、报告 agent）
+- 基于 Graph  orchestration 实现复杂任务流</p>
+<p><strong>6. 全域任务编排</strong>
+- 基于 Solon-AI Flow 低代码编排
+- 支持事件驱动、定时任务、人工触发等多种触发方式
+- 可视化任务流设计器</p>
+<p><strong>7. 可信数据协同</strong>
+- 支持 48+ 类数据源接入（公安网、互联网、物联网）
+- 数据脱敏、权限控制、审计日志
+- 基于 RBAC + 数据权限实现细粒度访问控制</p>
+<p><strong>8. 虚实融合训推</strong>
+- 仿真环境 + 真实环境联合训练
+- 支持模型热更新、A/B 测试
+- 基于 Solon-AI 的 RAG 能力实现知识增强</p>
+<p><strong>9. 业务系统操作接口</strong>
+- 标准化业务接口（接处警、人口、案件、车辆等）
+- 支持直接调用业务系统 API，实现业务闭环
+- 指令执行结果自动回写业务系统</p>
+<h4 id="1913">19.1.3 业务场景</h4>
+<p><strong>已支撑 50+ 警务实战场景 Skill：</strong></p>
+<table>
+<thead>
+<tr>
+<th>场景类别</th>
+<th>具体场景</th>
+<th>核心能力</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>情指行一体化</td>
+<td>情报研判、指挥调度、行动跟踪</td>
+<td>多源数据融合、态势感知</td>
+</tr>
+<tr>
+<td>合成作战</td>
+<td>跨部门协作、联合研判</td>
+<td>多智能体协作、知识共享</td>
+</tr>
+<tr>
+<td>重点人管控</td>
+<td>人员布控、动态管控、预警</td>
+<td>六维标签、时空轨迹</td>
+</tr>
+<tr>
+<td>沙盘推演</td>
+<td>预案推演、资源调度</td>
+<td>时空计算、智能体模拟</td>
+</tr>
+<tr>
+<td>风险预警</td>
+<td>异常检测、趋势预测</td>
+<td>机器学习、规则引擎</td>
+</tr>
+<tr>
+<td>案件侦查</td>
+<td>线索追踪、证据链分析</td>
+<td>图计算、自然语言查询</td>
+</tr>
+<tr>
+<td>治安防控</td>
+<td>重点区域监控、人员聚集分析</td>
+<td>IoT 接入、实时计算</td>
+</tr>
+<tr>
+<td>应急指挥</td>
+<td>突发事件处置、资源调度</td>
+<td>任务编排、协同通信</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1914">19.1.4 技术架构</h4>
+<pre class="codehilite"><code>┌─────────────────────────────────────────────────────────────┐
+│                    公共安全智能体平台                          │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │  接入层      │  │  智能体层    │  │  业务应用层          │ │
+│  │             │  │             │  │                     │ │
+│  │ • 48+数据源 │  │ • 警务大模型 │  │ • 情指行一体化      │ │
+│  │ • MQTT      │  │ • 50+Skills │  │ • 合成作战          │ │
+│  │ • 业务API   │  │ • Team Agent│  │ • 重点人管控        │ │
+│  │ • 视频流    │  │ • 编排引擎  │  │ • 沙盘推演          │ │
+│  └─────────────┘  └─────────────┘  │ • 风险预警          │ │
+│                                   └─────────────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │              核心引擎层（Solon-AI 框架）                │  │
+│  │                                                      │  │
+│  │  • ChatModel + RAG  │  • Agent + Team Agent         │  │
+│  │  • Flow 低代码编排  │  • Talents 插件体系            │  │
+│  │  • MCP 协议        │  • 多模态处理                  │  │
+│  └──────────────────────────────────────────────────────┘  │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │  数据层      │  │  存储层      │  │  基础设施层          │ │
+│  │             │  │             │  │                     │ │
+│  │ • 5亿+业务  │  │ • PostgreSQL│  │ • Docker            │ │
+│  │   数据治理  │  │ • PostGIS   │  │ • K8s               │ │
+│  │ • 48类数据源│  │ • TDEngine  │  │ • GPU 集群          │ │
+│  │ • 可信计算  │  │ • Redis     │  │ • 等保三级           │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+
+<h3 id="192">19.2 实践练习</h3>
+<h4 id="1">练习1：警务垂直大模型接入</h4>
+<p><strong>目标</strong>：基于 Solon-AI 的 ChatModel，接入国产大模型，构建警务垂直领域对话能力。</p>
+<p><strong>步骤</strong>：
+1. 创建 Solon-AI 项目，添加 <code>solon-ai-chatmodel</code> 依赖
+2. 配置 DeepSeek / Qwen 国产大模型（需符合等保要求）
+3. 构建警务领域提示词模板库（接处警、询问、讯问等）
+4. 实现多轮对话上下文管理
+5. 集成敏感词过滤 + 等保审计日志</p>
+<pre class="codehilite"><code class="language-java">// 警务大模型配置
+@Configuration
+public class PoliceLLMConfig {
+
+    @Bean
+    public ChatModel policeChatModel(@Value(&quot;${police.llm.api-key}&quot;) String apiKey) {
+        return OpenAiChatModel.builder()
+            .apiKey(apiKey)
+            .baseUrl(&quot;https://api.deepseek.com/v1&quot;)  // 或国内合规模型
+            .modelName(&quot;deepseek-chat&quot;)
+            .temperature(0.3)  // 警务场景低温度，确保准确性
+            .maxTokens(2000)
+            .build();
+    }
+
+    @Bean
+    public ChatMemory policeChatMemory() {
+        return MessageWindowChatMemory.builder()
+            .maxMessages(20)
+            .build();
+    }
+}
+</code></pre>
+
+<p><strong>验收标准</strong>：
+- 支持警务场景多轮对话（至少 5 轮上下文）
+- 响应时间 &lt; 3s
+- 包含等保审计日志</p>
+<hr />
+<h4 id="2-skill">练习2：技战法 Skill 开发</h4>
+<p><strong>目标</strong>：基于 Solon-AI 的 Talents 体系，开发一个警务技战法 Skill。</p>
+<p><strong>示例技战法："人员关系分析"</strong></p>
+<pre class="codehilite"><code class="language-java">// 人员关系分析 Skill
+@Talent(&quot;person-relation-analysis&quot;)
+@Description(&quot;分析重点人员的关系网络，识别核心人物和风险团伙&quot;)
+public class PersonRelationAnalysisTalent implements TalentExecutor {
+
+    @Override
+    public TalentResult execute(TalentContext context) {
+        // 1. 解析查询参数
+        String personId = context.getParameter(&quot;personId&quot;);
+        String relationType = context.getParameter(&quot;relationType&quot;, &quot;ALL&quot;);
+
+        // 2. 调用业务系统接口获取关系数据
+        List&lt;Relation&gt; relations = policeDataService.getRelations(personId, relationType);
+
+        // 3. 构建知识图谱
+        GraphBuilder builder = GraphBuilder.create();
+        relations.forEach(builder::addNode);
+
+        // 4. 分析核心人物（度中心性）
+        GraphAnalysisResult analysis = GraphAlgorithms.analyzeCentrality(builder.build());
+
+        // 5. 生成分析报告
+        String report = generateReport(personId, relations, analysis);
+
+        return TalentResult.success(report);
+    }
+
+    private String generateReport(String personId, List&lt;Relation&gt; relations, GraphAnalysisResult analysis) {
+        // 生成结构化分析报告
+        return &quot;&quot;&quot;
+            ## 人员关系分析报告
+
+            **目标人员**: %s
+
+            **关系网络规模**:
+            - 直接关联人员: %d
+            - 关系类型分布: %s
+
+            **核心人物识别**:
+            - 度中心性最高: %s (度数=%d)
+            - 风险团伙识别: %s
+
+            **研判建议**: %s
+            &quot;&quot;&quot;.formatted(
+                personId,
+                relations.size(),
+                relations.stream().map(Relation::getType).collect(Collectors.groupingBy(r -&gt; r, Collectors.counting())),
+                analysis.getTopNode().getId(),
+                analysis.getTopNode().getDegree(),
+                analysis.getRiskGang(),
+                analysis.getSuggestion()
+            );
+    }
+}
+</code></pre>
+
+<p><strong>验收标准</strong>：
+- Skill 可被 Solon-AI 正确加载和执行
+- 支持通过自然语言触发（如"分析张三的关系网"）
+- 输出结构化报告（Markdown / JSON）</p>
+<hr />
+<h4 id="3">练习3：时空轨迹分析</h4>
+<p><strong>目标</strong>：基于 PostGIS + Solon-AI Flow，实现人员轨迹分析和热点发现。</p>
+<p><strong>实现要点</strong>：
+1. 使用 PostGIS 存储轨迹点（空间坐标 + 时间戳）
+2. 基于 Solon-AI Flow 实现轨迹查询编排
+3. 支持时空范围查询（某人在某时间段内的轨迹）
+4. 实现停留点分析、出行规律识别
+5. 热点发现：基于 DBSCAN 聚类算法</p>
+<pre class="codehilite"><code class="language-sql">-- 轨迹表设计
+CREATE TABLE person_trajectory (
+    id BIGSERIAL PRIMARY KEY,
+    person_id VARCHAR(64) NOT NULL,
+    device_id VARCHAR(64),
+    location GEOGRAPHY(Point, 4326),  -- WGS-84 坐标系
+    location_type VARCHAR(32),  -- GPS / 基站 / 视频
+    captured_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 空间索引（加速轨迹查询）
+CREATE INDEX idx_trajectory_person_time ON person_trajectory(person_id, captured_at);
+CREATE INDEX idx_trajectory_location ON person_trajectory USING GIST(location);
+</code></pre>
+
+<p><strong>验收标准</strong>：
+- 轨迹查询响应时间 &lt; 500ms（100万条数据）
+- 支持时空范围查询（时间 + 地理范围）
+- 停留点识别准确率 &gt; 85%</p>
+<hr />
+<h4 id="4">练习4：多智能体协同研判</h4>
+<p><strong>目标</strong>：基于 Solon-AI 的 Team Agent，构建多智能体协同研判系统。</p>
+<p><strong>智能体分工</strong>：
+- <strong>情报收集 Agent</strong>：从多源数据收集相关信息
+- <strong>分析推理 Agent</strong>：基于知识图谱 + 规则引擎进行分析
+- <strong>风险评估 Agent</strong>：评估风险等级，生成预警
+- <strong>报告生成 Agent</strong>：自动生成研判报告</p>
+<pre class="codehilite"><code class="language-java">// 多智能体协同研判
+@Team(&quot;police-analysis-team&quot;)
+public class PoliceAnalysisTeam {
+
+    @Agent(&quot;intel-collector&quot;)
+    public Mono&lt;String&gt; collectIntelligence(@Variable(&quot;target&quot;) String target) {
+        // 从多源数据收集信息
+        return Mono.zip(
+            policeApiService.getPersonInfo(target),
+            policeApiService.getVehicleInfo(target),
+            policeApiService.getCaseInfo(target)
+        ).map(tuple -&gt; mergeIntelligence(tuple));
+    }
+
+    @Agent(&quot;risk-analyzer&quot;)
+    public Mono&lt;RiskAssessment&gt; analyzeRisk(@Variable(&quot;intelligence&quot;) String intel) {
+        // 基于规则 + 大模型进行风险评估
+        return llmService.analyzeRisk(intel)
+            .map(result -&gt; RiskAssessment.fromLLM(result));
+    }
+
+    @Agent(&quot;report-generator&quot;)
+    public Mono&lt;String&gt; generateReport(@Variable(&quot;risk&quot;) RiskAssessment risk) {
+        // 生成结构化研判报告
+        return Mono.just(reportTemplate.render(risk));
+    }
+}
+</code></pre>
+
+<p><strong>验收标准</strong>：
+- 多 Agent 协同完成完整研判流程 &lt; 30s
+- 支持人工介入和干预
+- 研判结果可追溯（审计日志）</p>
+<hr />
+<h4 id="5">练习5：业务系统闭环</h4>
+<p><strong>目标</strong>：实现从"咨询问答"到"业务闭环"的跨越，直接操作业务系统。</p>
+<p><strong>实现要点</strong>：
+1. 定义标准化业务接口规范（RESTful API）
+2. 基于 Solon-AI Function Calling 实现指令解析
+3. 指令执行 + 结果验证 + 自动回写
+4. 支持人工审核和撤销</p>
+<pre class="codehilite"><code class="language-java">// 业务系统操作接口
+@Talent(&quot;police-business-operator&quot;)
+public class PoliceBusinessOperatorTalent implements TalentExecutor {
+
+    @Override
+    public TalentResult execute(TalentContext context) {
+        String userQuery = context.getUserMessage();
+
+        // 1. 大模型解析用户意图
+        Intent intent = llmService.parseIntent(userQuery);
+
+        // 2. 映射到业务操作
+        BusinessOperation operation = operationMapper.map(intent);
+
+        // 3. 权限校验
+        if (!permissionService.hasPermission(context.getUserId(), operation.getPermission())) {
+            return TalentResult.failure(&quot;无操作权限&quot;);
+        }
+
+        // 4. 执行业务操作
+        OperationResult result = businessService.execute(operation);
+
+        // 5. 自动回写业务系统
+        if (result.isSuccess() &amp;&amp; operation.isAutoWriteBack()) {
+            businessSystemService.writeBack(result);
+        }
+
+        // 6. 生成反馈
+        return TalentResult.success(result.getMessage());
+    }
+}
+
+// 示例：从咨询到闭环
+// 用户输入：&quot;把张三的管控等级从三级提升到二级&quot;
+// 1. LLM 解析：{intent: &quot;update_control_level&quot;, person: &quot;张三&quot;, newLevel: &quot;二级&quot;}
+// 2. 调用业务系统 API：POST /api/person/control-level {personId: &quot;xxx&quot;, level: &quot;LEVEL_2&quot;}
+// 3. 自动回写业务系统
+// 4. 返回：&quot;已将张三的管控等级提升为二级，系统已生效。&quot;
+</code></pre>
+
+<p><strong>验收标准</strong>：
+- 支持 10+ 种常见业务操作的自动执行
+- 操作成功率 &gt; 99%
+- 完整的审计日志（谁、什么时间、做了什么、结果如何）</p>
+<hr />
+<h3 id="193">19.3 项目实战</h3>
+<h4 id="1931">19.3.1 项目需求</h4>
+<p>构建一个<strong>面向公共安全领域的垂直大模型与行业智能体平台</strong>，具备以下核心能力：</p>
+<ol>
+<li><strong>警务大模型</strong>：基于国产大模型，构建警务垂直领域对话能力</li>
+<li><strong>50+ 警务 Skill</strong>：覆盖情指行一体化、合成作战、重点人管控、沙盘推演、风险预警等核心业务</li>
+<li><strong>六维标签体系</strong>：人员标签（身份、行为、关系、风险、轨迹、资产）</li>
+<li><strong>时空计算引擎</strong>：轨迹分析、热点发现、时空查询</li>
+<li><strong>智能体编排</strong>：多智能体协同研判</li>
+<li><strong>业务闭环</strong>：直接操作业务系统，实现从咨询到执行的跨越</li>
+<li><strong>数据治理</strong>：48+ 类数据源接入，5亿+ 业务数据治理</li>
+</ol>
+<h4 id="1932">19.3.2 技术架构</h4>
+<p><strong>技术栈</strong>：
+- <strong>后端框架</strong>：Solon-AI 4.1.1 + Spring Boot 3.2.4
+- <strong>大模型</strong>：DeepSeek / Qwen（国产合规模型）
+- <strong>向量数据库</strong>：PostgreSQL + pgvector（知识库 + 标签推理）
+- <strong>时空数据库</strong>：PostGIS（轨迹存储 + 时空查询）
+- <strong>时序数据库</strong>：TDEngine（IoT 设备数据）
+- <strong>图数据库</strong>：Neo4j（关系网络分析）
+- <strong>消息队列</strong>：RabbitMQ（任务编排）
+- <strong>MQTT</strong>：EMQX（IoT 设备接入）
+- <strong>前端</strong>：Vue 3 + Cesium（3D 态势展示）</p>
+<p><strong>模块划分</strong>：</p>
+<pre class="codehilite"><code>police-ai-platform/
+├── police-ai-core/              # 核心模块（Solon-AI 集成）
+│   ├── src/main/java/
+│   │   └── com.police.ai/
+│   │       ├── PoliceChatModel.java          # 警务大模型
+│   │       ├── PoliceChatMemory.java         # 上下文记忆
+│   │       ├── TalentRegistry.java           # Skill 注册中心
+│   │       └── BusinessOperator.java         # 业务操作接口
+├── police-ai-talents/           # 50+ 警务 Skill
+│   ├── src/main/java/
+│   │   └── com.police.ai.talent/
+│   │       ├── PersonRelationAnalysis.java   # 人员关系分析
+│   │       ├── TrajectoryAnalysis.java        # 轨迹分析
+│   │       ├── RiskAssessment.java            # 风险评估
+│   │       ├── CaseInvestigation.java         # 案件侦查
+│   │       └── ...
+├── police-ai-flow/              # 工作流编排
+│   ├── src/main/java/
+│   │   └── com.police.ai.flow/
+│   │       ├── AnalysisWorkflow.java          # 研判工作流
+│   │       ├── WarningWorkflow.java           # 预警工作流
+│   │       └── ReportWorkflow.java            # 报告生成工作流
+├── police-ai-agent/             # 智能体系统
+│   ├── src/main/java/
+│   │   └── com.police.ai.agent/
+│   │       ├── IntelCollectorAgent.java       # 情报收集
+│   │       ├── RiskAnalyzerAgent.java         # 风险分析
+│   │       ├── ReportGeneratorAgent.java      # 报告生成
+│   │       └── PoliceTeamAgent.java           # 团队协作
+├── police-ai-rag/               # 知识库
+│   ├── src/main/java/
+│   │   └── com.police.ai.rag/
+│   │       ├── PoliceKnowledgeBase.java       # 警务知识库
+│   │       ├── DocumentLoader.java            # 文档加载
+│   │       └── HybridSearch.java              # 混合检索
+├── police-ai-data/              # 数据接入
+│   ├── src/main/java/
+│   │   └── com.police.ai.data/
+│   │       ├── DataSourceConnector.java       # 数据源接入
+│   │       ├── DataDesensitizer.java          # 数据脱敏
+│   │       └── DataSyncService.java           # 数据同步
+├── police-ai-spatial/           # 时空计算
+│   ├── src/main/java/
+│   │   └── com.police.ai.spatial/
+│   │       ├── TrajectoryService.java         # 轨迹服务
+│   │       ├── HotspotDetection.java          # 热点发现
+│   │       └── SpatialQuery.java              # 空间查询
+└── police-ai-web/               # 前端应用
+    ├── src/
+    │   ├── views/                # Vue 3 + Cesium
+    │   ├── components/
+    │   └── api/
+    └── pom.xml
+</code></pre>
+
+<h4 id="1933">19.3.3 核心代码示例</h4>
+<p><strong>示例1：警务大模型 + 业务闭环</strong></p>
+<pre class="codehilite"><code class="language-java">@Service
+public class PoliceAIService {
+
+    @Autowired
+    private ChatModel policeChatModel;
+
+    @Autowired
+    private BusinessOperator businessOperator;
+
+    @Autowired
+    private TalentRegistry talentRegistry;
+
+    /**
+     * 智能研判接口
+     * 支持自然语言查询，自动调用业务系统
+     */
+    public String intelligentAnalysis(String userId, String query) {
+        // 1. 意图识别
+        Intent intent = recognizeIntent(query);
+
+        // 2. 路由到对应 Skill
+        if (intent.hasSkill()) {
+            Talent talent = talentRegistry.getTalent(intent.getSkillName());
+            return talent.execute(query);
+        }
+
+        // 3. 业务操作（需要执行具体业务）
+        if (intent.isBusinessOperation()) {
+            return businessOperator.operate(userId, query);
+        }
+
+        // 4. 普通对话（警务知识问答）
+        return policeChatModel.generate(query);
+    }
+
+    private Intent recognizeIntent(String query) {
+        // 基于 LLM 的意图识别
+        String prompt = &quot;&quot;&quot;
+            你是警务智能助手，请分析用户意图。
+            用户输入：%s
+
+            请返回 JSON 格式：
+            {
+                &quot;type&quot;: &quot;skill&quot; | &quot;business&quot; | &quot;chat&quot;,
+                &quot;skillName&quot;: &quot;技能名称（如 type=skill）&quot;,
+                &quot;businessAction&quot;: &quot;业务操作（如 type=business）&quot;,
+                &quot;confidence&quot;: 0.95
+            }
+            &quot;&quot;&quot;.formatted(query);
+
+        String response = policeChatModel.generate(prompt);
+        return Intent.fromJSON(response);
+    }
+}
+</code></pre>
+
+<p><strong>示例2：六维标签推理</strong></p>
+<pre class="codehilite"><code class="language-java">@Service
+public class SixDimensionTagService {
+
+    @Autowired
+    private RAG ragService;
+
+    @Autowired
+    private PoliceKnowledgeBase knowledgeBase;
+
+    /**
+     * 基于 RAG 的知识增强标签推理
+     */
+    public SixDimensionTags inferTags(String personId) {
+        // 1. 从知识库检索相关信息
+        List&lt;Document&gt; docs = knowledgeBase.search(personId, 10);
+
+        // 2. 构建提示词
+        String prompt = buildPrompt(personId, docs);
+
+        // 3. LLM 推理标签
+        String response = llmService.generate(prompt);
+
+        // 4. 解析标签
+        return SixDimensionTags.fromJSON(response);
+    }
+
+    private String buildPrompt(String personId, List&lt;Document&gt; docs) {
+        return &quot;&quot;&quot;
+            你是警务情报分析师，请基于以下信息，对人员 %s 进行六维标签推理。
+
+            六维标签体系：
+            1. 身份标签：职业、学历、技能、特长
+            2. 行为标签：日常行为模式、异常行为、消费习惯
+            3. 关系标签：社会关系、家族关系、同伙关系
+            4. 风险标签：前科、涉黑涉恶、涉诈、涉毒
+            5. 轨迹标签：活动范围、常去地点、出行规律
+            6. 资产标签：房产、车辆、存款、投资
+
+            相关信息：
+            %s
+
+            请输出 JSON 格式的六维标签，每个维度包含标签列表和置信度。
+            &quot;&quot;&quot;.formatted(personId, docs.stream()
+                .map(Document::getContent)
+                .collect(Collectors.joining(&quot;\n\n&quot;)));
+    }
+}
+
+// 六维标签数据结构
+public record SixDimensionTags(
+    List&lt;Tag&gt; identityTags,      // 身份标签
+    List&lt;Tag&gt; behaviorTags,      // 行为标签
+    List&lt;Tag&gt; relationTags,      // 关系标签
+    List&lt;Tag&gt; riskTags,          // 风险标签
+    List&lt;Tag&gt; trajectoryTags,    // 轨迹标签
+    List&lt;Tag&gt; assetTags          // 资产标签
+) {
+    public record Tag(String name, String value, double confidence) {}
+}
+</code></pre>
+
+<p><strong>示例3：时空轨迹分析</strong></p>
+<pre class="codehilite"><code class="language-java">@Service
+public class SpatialTrajectoryService {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    /**
+     * 查询人员在指定时间范围内的轨迹
+     */
+    public List&lt;TrajectoryPoint&gt; queryTrajectory(String personId, LocalDateTime start, LocalDateTime end, Polygon area) {
+        String sql = &quot;&quot;&quot;
+            SELECT id, person_id, 
+                   ST_AsText(location) as location_wkt,
+                   captured_at
+            FROM person_trajectory
+            WHERE person_id = ?
+              AND captured_at BETWEEN ? AND ?
+              AND ST_Within(location, ST_GeomFromText(?, 4326))
+            ORDER BY captured_at
+            &quot;&quot;&quot;;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -&gt; {
+            WKTReader reader = new WKTReader();
+            Point point = (Point) reader.read(rs.getString(&quot;location_wkt&quot;));
+            return new TrajectoryPoint(
+                rs.getLong(&quot;id&quot;),
+                rs.getString(&quot;person_id&quot;),
+                point,
+                rs.getTimestamp(&quot;captured_at&quot;).toLocalDateTime()
+            );
+        }, personId, start, end, area.toText());
+    }
+
+    /**
+     * 停留点分析（基于速度阈值）
+     */
+    public List&lt;StayPoint&gt; detectStayPoints(String personId, double speedThreshold, Duration minStayDuration) {
+        List&lt;TrajectoryPoint&gt; trajectory = queryFullTrajectory(personId);
+
+        List&lt;StayPoint&gt; stayPoints = new ArrayList&lt;&gt;();
+        List&lt;TrajectoryPoint&gt; currentCluster = new ArrayList&lt;&gt;();
+
+        for (int i = 0; i &lt; trajectory.size(); i++) {
+            TrajectoryPoint current = trajectory.get(i);
+
+            if (i &gt; 0) {
+                TrajectoryPoint prev = trajectory.get(i - 1);
+                double speed = calculateSpeed(prev, current);
+
+                if (speed &lt; speedThreshold) {
+                    currentCluster.add(current);
+                } else {
+                    if (!currentCluster.isEmpty() &amp;&amp; 
+                        Duration.between(currentCluster.get(0).getTime(), 
+                                        currentCluster.get(currentCluster.size() - 1).getTime())
+                            .compareTo(minStayDuration) &gt;= 0) {
+                        stayPoints.add(buildStayPoint(currentCluster));
+                    }
+                    currentCluster.clear();
+                }
+            }
+        }
+
+        return stayPoints;
+    }
+}
+</code></pre>
+
+<p><strong>示例4：多智能体协同研判</strong></p>
+<pre class="codehilite"><code class="language-java">@Team(&quot;police-analysis-team&quot;)
+public class PoliceAnalysisTeam {
+
+    @Agent(&quot;intel-collector&quot;)
+    public Mono&lt;IntelligenceReport&gt; collectIntelligence(@Variable(&quot;target&quot;) String target) {
+        return Mono.zip(
+            policeApiService.getPersonInfo(target),
+            policeApiService.getVehicleInfo(target),
+            policeApiService.getCaseInfo(target),
+            policeApiService.getTrajectoryInfo(target)
+        ).map(tuple -&gt; IntelligenceReport.merge(tuple));
+    }
+
+    @Agent(&quot;graph-analyzer&quot;)
+    public Mono&lt;GraphAnalysisResult&gt; analyzeGraph(@Variable(&quot;intel&quot;) IntelligenceReport intel) {
+        // 构建关系图谱并分析
+        return Mono.just(GraphAlgorithms.analyze(intel));
+    }
+
+    @Agent(&quot;risk-analyzer&quot;)
+    public Mono&lt;RiskAssessment&gt; analyzeRisk(@Variable(&quot;intel&quot;) IntelligenceReport intel, 
+                                            @Variable(&quot;graph&quot;) GraphAnalysisResult graph) {
+        // 基于规则 + LLM 进行风险评估
+        String prompt = riskPromptTemplate.render(intel, graph);
+        String llmResponse = llmService.generate(prompt);
+        return Mono.just(RiskAssessment.fromLLM(llmResponse));
+    }
+
+    @Agent(&quot;report-generator&quot;)
+    public Mono&lt;String&gt; generateReport(@Variable(&quot;risk&quot;) RiskAssessment risk) {
+        // 生成结构化研判报告
+        return Mono.just(reportTemplate.render(risk));
+    }
+
+    /**
+     * 完整研判流程
+     */
+    public Mono&lt;String&gt; fullAnalysis(String target) {
+        return collectIntelligence(target)
+            .flatMap(intel -&gt; analyzeGraph(intel)
+                .flatMap(graph -&gt; analyzeRisk(intel, graph)
+                    .flatMap(risk -&gt; generateReport(risk))));
+    }
+}
+</code></pre>
+
+<h4 id="1934">19.3.4 部署方案</h4>
+<p><strong>部署架构</strong>：</p>
+<pre class="codehilite"><code class="language-yaml"># docker-compose.yml
+version: '3.8'
+services:
+  police-ai-app:
+    image: your-org/police-ai-platform:latest
+    ports:
+      - &quot;8080:8080&quot;
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/police_db
+      - SPRING_REDIS_HOST=redis
+      - SPRING_MQTT_HOST=emqx
+      - POLICE_LLM_API_KEY=${LLM_API_KEY}
+    depends_on:
+      - postgres
+      - redis
+      - neo4j
+      - tdengine
+      - emqx
+
+  postgres:
+    image: postgis/postgis:15-3.3
+    environment:
+      - POSTGRES_DB=police_db
+      - POSTGRES_USER=police
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  neo4j:
+    image: neo4j:5.15
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD}
+    volumes:
+      - neo4j-data:/data
+
+  tdengine:
+    image: tdengine/tdengine:3.0
+    environment:
+      - TAOS_ROOT_PASSWORD=${TD_PASSWORD}
+    volumes:
+      - tdengine-data:/var/lib/taos
+
+  emqx:
+    image: emqx/emqx:5.5
+    ports:
+      - &quot;1883:1883&quot;
+      - &quot;8083:8083&quot;
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - &quot;6379:6379&quot;
+
+volumes:
+  postgres-data:
+  neo4j-data:
+  tdengine-data:
+</code></pre>
+
+<p><strong>等保合规要求</strong>：
+1. 数据加密：传输加密（TLS 1.3）+ 存储加密（AES-256）
+2. 审计日志：所有操作记录审计日志，留存 180 天以上
+3. 权限控制：RBAC + 数据权限，最小权限原则
+4. 网络安全：防火墙、入侵检测、DDoS 防护
+5. 国产化：操作系统、数据库、大模型均使用国产合规产品</p>
+<p><strong>监控指标</strong>：
+1. 大模型响应时间（P95 &lt; 3s）
+2. 业务操作成功率（&gt; 99%）
+3. 时空查询响应时间（P95 &lt; 500ms）
+4. 并发用户数（&gt; 1000）
+5. 数据接入延迟（&lt; 1s）</p>
+<hr />
+<h3 id="194">19.4 注意事项</h3>
+<ol>
+<li><strong>等保合规</strong>：警务系统需满足等保三级要求，数据加密、审计日志、权限控制缺一不可</li>
+<li><strong>数据安全</strong>：警务数据敏感，必须脱敏后才能用于模型训练</li>
+<li><strong>国产化要求</strong>：优先选择国产大模型、国产数据库，避免供应链风险</li>
+<li><strong>性能优化</strong>：时空查询和图计算消耗资源大，需异步处理 + 缓存</li>
+<li><strong>Skill 质量</strong>：50+ Skill 需经过实战验证，避免"为了数量而数量"</li>
+<li><strong>人机协同</strong>：AI 辅助决策，最终决策权在人，设计人工审核和干预机制</li>
+<li><strong>可解释性</strong>：研判结果必须可解释，不能是"黑盒"输出</li>
+</ol>
+<hr />
+<h3 id="195">19.5 实战作业</h3>
+<p><strong>作业1（基础巩固）</strong>：基于 Solon-AI 实现一个简单的警务对话助手，支持接处警场景的问答和知识查询</p>
+<p><strong>作业2（拓展应用）</strong>：实现一个人员关系分析 Skill，基于知识图谱分析重点人员的关系网络，识别核心人物和风险团伙</p>
+<p><strong>作业3（动手实践）</strong>：基于 PostGIS + Solon-AI Flow，实现一个简单的轨迹分析系统，支持轨迹查询、停留点分析、热点发现</p>
+<p><strong>作业4（综合实战）</strong>：构建一个最小化的警务智能体平台，包含：警务大模型对话、1-2 个 Skill、基础的数据接入能力</p>
+<p><strong>作业5（毕业设计）</strong>：完整实现第19章的项目实战，包含：警务大模型、5+ Skill、多智能体协同、业务系统闭环、等保合规</p>
+<hr />
+            <div class="chapter-nav">
+                <a href="18.html" class="nav-prev">← 第18章</a>
+                
+            </div>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        });
+    </script>
+</body>
+</html>

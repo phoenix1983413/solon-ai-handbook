@@ -65,12 +65,12 @@ for i, (chapter_num, chapter_info) in enumerate(sorted_chapters):
         prev_link = '<a href="../index.html" class="nav-prev">← 返回首页</a>'
     
     next_link = ''
-    if chapter_num < 13:
+    if chapter_num < 19:
         next_link = f'<a href="{chapter_num+1:02d}.html" class="nav-next">第{chapter_num+1}章 →</a>'
     
     # Generate active states for sidebar
     active_states = {}
-    for n in range(1, 14):
+    for n in range(1, 20):
         active_states[f'active{n}'] = 'class="active"' if n == chapter_num else ''
     
     # HTML template
@@ -160,6 +160,22 @@ for i, (chapter_num, chapter_info) in enumerate(sorted_chapters):
                     <li><a href="11.html" {active_states['active11']}>第11章 企业级 RAG 应用</a></li>
                     <li><a href="12.html" {active_states['active12']}>第12章 MCP 网关与服务治理</a></li>
                     <li><a href="13.html" {active_states['active13']}>第13章 综合项目实战：智能客服平台</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第四阶段</h3>
+                <ul>
+                    <li><a href="14.html" {active_states['active14']}>第14章 企业知识库与智能文档处理平台</a></li>
+                    <li><a href="15.html" {active_states['active15']}>第15章 代码智能助手与研发效能平台</a></li>
+                    <li><a href="16.html" {active_states['active16']}>第16章 数据智能分析与决策支持系统</a></li>
+                    <li><a href="17.html" {active_states['active17']}>第17章 IoT/智能硬件监控与诊断平台</a></li>
+                    <li><a href="18.html" {active_states['active18']}>第18章 GIS空间数据智能分析平台</a></li>
+                </ul>
+            </div>
+            <div class="nav-section">
+                <h3>第五阶段</h3>
+                <ul>
+                    <li><a href="19.html" {active_states['active19']}>第19章 面向公共安全领域的垂直大模型与行业智能体</a></li>
                 </ul>
             </div>
         </nav>
