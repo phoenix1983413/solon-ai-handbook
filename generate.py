@@ -11,20 +11,75 @@ import os
 with open('/Users/deane/Documents/workspace-java/solon-ai/docs/learning-guide.md', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# Split by chapters
-# Pattern to match chapter headers
-chapter_pattern = r'## ={5,}\n## 第(\d+)章 (.+?)(?=\n## ={5,}|\Z)'
+# Find ALL chapter headings (including subsections)
+all_headings = list(re.finditer(r'## 第(\d+)章 (.+?)(?=\n|$)', content))
 
-# Find all chapters
-matches = list(re.finditer(chapter_pattern, content, re.DOTALL))
+# Group by chapter number - take the first occurrence of each chapter number
+# and combine all content until the next distinct chapter number
+chapters = {}
+for match in all_headings:
+    chapter_num = int(match.group(1))
+    if chapter_num not in chapters:
+        chapters[chapter_num] = {
+            'title': match.group(2).strip(),
+            'start': match.start()
+        }
 
-# Create HTML template for each chapter
-html_template = """<!DOCTYPE html>
+# Sort by chapter number
+sorted_chapters = sorted(chapters.items())
+
+# Extract content for each chapter
+for i, (chapter_num, chapter_info) in enumerate(sorted_chapters):
+    start_pos = chapter_info['start']
+    
+    # End position is the start of the next chapter (or end of file)
+    if i + 1 < len(sorted_chapters):
+        end_pos = sorted_chapters[i + 1][1]['start']
+    else:
+        end_pos = len(content)
+    
+    # Extract chapter content
+    chapter_content = content[start_pos:end_pos]
+    
+    # Remove the chapter header(s) from content - keep only the first one
+    lines = chapter_content.split('\n')
+    first_heading_found = False
+    filtered_lines = []
+    for line in lines:
+        if line.startswith('## 第') and not first_heading_found:
+            first_heading_found = True
+            continue  # Skip the first chapter heading
+        filtered_lines.append(line)
+    
+    chapter_content = '\n'.join(filtered_lines)
+    
+    # Convert markdown to HTML
+    md = markdown.Markdown(extensions=['extra', 'codehilite', 'toc'])
+    html_content = md.convert(chapter_content)
+    
+    # Generate navigation links
+    prev_link = ''
+    if chapter_num > 1:
+        prev_link = f'<a href="{chapter_num-1:02d}.html" class="nav-prev">← 第{chapter_num-1}章</a>'
+    else:
+        prev_link = '<a href="../index.html" class="nav-prev">← 返回首页</a>'
+    
+    next_link = ''
+    if chapter_num < 13:
+        next_link = f'<a href="{chapter_num+1:02d}.html" class="nav-next">第{chapter_num+1}章 →</a>'
+    
+    # Generate active states for sidebar
+    active_states = {}
+    for n in range(1, 14):
+        active_states[f'active{n}'] = 'class="active"' if n == chapter_num else ''
+    
+    # HTML template
+    html_template = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>第{num}章 {title} - Solon-AI 学习手册</title>
+    <title>第{chapter_num}章 {chapter_info['title']} - Solon-AI 学习手册</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <style>
@@ -82,29 +137,29 @@ html_template = """<!DOCTYPE html>
             <div class="nav-section">
                 <h3>第一阶段</h3>
                 <ul>
-                    <li><a href="01.html" {active1}>第1章 框架概览</a></li>
-                    <li><a href="02.html" {active2}>第2章 ChatModel</a></li>
-                    <li><a href="03.html" {active3}>第3章 提示词工程</a></li>
-                    <li><a href="04.html" {active4}>第4章 工具基础</a></li>
+                    <li><a href="01.html" {active_states['active1']}>第1章 框架概览</a></li>
+                    <li><a href="02.html" {active_states['active2']}>第2章 ChatModel</a></li>
+                    <li><a href="03.html" {active_states['active3']}>第3章 提示词工程</a></li>
+                    <li><a href="04.html" {active_states['active4']}>第4章 工具基础</a></li>
                 </ul>
             </div>
             <div class="nav-section">
                 <h3>第二阶段</h3>
                 <ul>
-                    <li><a href="05.html" {active5}>第5章 RAG</a></li>
-                    <li><a href="06.html" {active6}>第6章 Agent</a></li>
-                    <li><a href="07.html" {active7}>第7章 MCP</a></li>
-                    <li><a href="08.html" {active8}>第8章 Flow</a></li>
-                    <li><a href="09.html" {active9}>第9章 Talents</a></li>
+                    <li><a href="05.html" {active_states['active5']}>第5章 RAG</a></li>
+                    <li><a href="06.html" {active_states['active6']}>第6章 Agent</a></li>
+                    <li><a href="07.html" {active_states['active7']}>第7章 MCP</a></li>
+                    <li><a href="08.html" {active_states['active8']}>第8章 Flow</a></li>
+                    <li><a href="09.html" {active_states['active9']}>第9章 Talents</a></li>
                 </ul>
             </div>
             <div class="nav-section">
                 <h3>第三阶段</h3>
                 <ul>
-                    <li><a href="10.html" {active10}>第10章 多Agent</a></li>
-                    <li><a href="11.html" {active11}>第11章 企业RAG</a></li>
-                    <li><a href="12.html" {active12}>第12章 MCP网关</a></li>
-                    <li><a href="13.html" {active13}>第13章 综合实战</a></li>
+                    <li><a href="10.html" {active_states['active10']}>第10章 多Agent</a></li>
+                    <li><a href="11.html" {active_states['active11']}>第11章 企业RAG</a></li>
+                    <li><a href="12.html" {active_states['active12']}>第12章 MCP网关</a></li>
+                    <li><a href="13.html" {active_states['active13']}>第13章 综合实战</a></li>
                 </ul>
             </div>
         </nav>
@@ -114,7 +169,7 @@ html_template = """<!DOCTYPE html>
     </aside>
     <main class="main-content">
         <div class="content-wrapper">
-            {content}
+            {html_content}
             <div class="chapter-nav">
                 {prev_link}
                 {next_link}
@@ -131,50 +186,13 @@ html_template = """<!DOCTYPE html>
     </script>
 </body>
 </html>"""
-
-# Process each chapter
-for i, match in enumerate(matches):
-    chapter_num = int(match.group(1))
-    chapter_title = match.group(2)
-    chapter_content = match.group(0)
-    
-    # Remove the chapter header from content (we'll add our own)
-    chapter_content = re.sub(r'^## ={5,}\n## 第\d+章 .+?\n', '', chapter_content, count=1)
-    
-    # Convert markdown to HTML
-    md = markdown.Markdown(extensions=['extra', 'codehilite', 'toc'])
-    html_content = md.convert(chapter_content)
-    
-    # Generate navigation links
-    prev_link = ''
-    if chapter_num > 1:
-        prev_link = f'<a href="{chapter_num-1:02d}.html" class="nav-prev">← 第{chapter_num-1}章</a>'
-    else:
-        prev_link = '<a href="../index.html" class="nav-prev">← 返回首页</a>'
-    
-    next_link = ''
-    if chapter_num < 13:
-        next_link = f'<a href="{chapter_num+1:02d}.html" class="nav-next">第{chapter_num+1}章 →</a>'
-    
-    # Generate active states
-    active_states = {f'active{n}': 'class="active"' if n == chapter_num else '' for n in range(1, 14)}
-    
-    # Fill template
-    html = html_template.format(
-        num=chapter_num,
-        title=chapter_title,
-        content=html_content,
-        prev_link=prev_link,
-        next_link=next_link,
-        **active_states
-    )
     
     # Write to file
     output_path = f'/Users/deane/Documents/workspace-java/solon-ai/handbook/chapters/{chapter_num:02d}.html'
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(html)
+        f.write(html_template)
     
-    print(f'✓ Generated chapter {chapter_num:02d}: {chapter_title}')
+    print(f'✓ Generated chapter {chapter_num:02d}: {chapter_info["title"]}')
 
-print('\n✅ All chapters generated successfully!')
+print(f'\n✅ Generated {len(sorted_chapters)} chapters successfully!')
 print(f'   Output directory: /Users/deane/Documents/workspace-java/solon-ai/handbook/chapters/')
