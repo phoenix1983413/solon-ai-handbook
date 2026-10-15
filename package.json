@@ -1,0 +1,21 @@
+{
+  "name": "solon-ai-handbook",
+  "version": "1.0.0",
+  "description": "Solon-AI 框架系统性学习手册 - 从入门到进阶",
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "generate": "python3 generate.py"
+  },
+  "keywords": [
+    "solon-ai",
+    "java",
+    "ai",
+    "llm",
+    "rag",
+    "agent",
+    "mcp",
+    "learning-guide"
+  ],
+  "author": "deane",
+  "license": "MIT"
+}

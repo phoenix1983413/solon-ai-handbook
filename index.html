@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solon-AI 学习手册</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>🛡️ Solon-AI</h1>
+            <p>学习手册</p>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h3>第一阶段：基础入门</h3>
+                <ul>
+                    <li><a href="chapters/01.html" data-chapter="1">第1章 框架概览与环境搭建</a></li>
+                    <li><a href="chapters/02.html" data-chapter="2">第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="chapters/03.html" data-chapter="3">第3章 提示词工程与对话管理</a></li>
+                    <li><a href="chapters/04.html" data-chapter="4">第4章 工具（Tool）基础</a></li>
+                </ul>
+            </div>
+            
+            <div class="nav-section">
+                <h3>第二阶段：核心进阶</h3>
+                <ul>
+                    <li><a href="chapters/05.html" data-chapter="5">第5章 RAG 知识库全链路</a></li>
+                    <li><a href="chapters/06.html" data-chapter="6">第6章 Agent 智能体</a></li>
+                    <li><a href="chapters/07.html" data-chapter="7">第7章 MCP 协议深度集成</a></li>
+                    <li><a href="chapters/08.html" data-chapter="8">第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="chapters/09.html" data-chapter="9">第9章 Talents 能力插件体系</a></li>
+                </ul>
+            </div>
+            
+            <div class="nav-section">
+                <h3>第三阶段：高级实战</h3>
+                <ul>
+                    <li><a href="chapters/10.html" data-chapter="10">第10章 多智能体协作系统</a></li>
+                    <li><a href="chapters/11.html" data-chapter="11">第11章 企业级 RAG 应用</a></li>
+                    <li><a href="chapters/12.html" data-chapter="12">第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="chapters/13.html" data-chapter="13">第13章 综合项目实战</a></li>
+                </ul>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <p>版本: 4.1.1 | JDK 8+</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <!-- Will be populated by JavaScript -->
+            <div id="chapter-content"></div>
+        </div>
+    </main>
+
+    <!-- Search Modal -->
+    <div id="search-modal" class="search-modal">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="搜索章节..." autofocus>
+            <div id="search-results" class="search-results"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
