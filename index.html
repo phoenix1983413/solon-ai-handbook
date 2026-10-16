@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solon-AI 学习手册 - 月球探索</title>
+    <title>Solon-AI 学习手册 - 地球全景</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -299,8 +299,8 @@
     <!-- 侧边栏导航 -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h1>🌙 Solon-AI</h1>
-            <p>学习手册 - 月球探索</p>
+            <h1>🌍 Solon-AI</h1>
+            <p>学习手册 - 地球全景</p>
         </div>
         
         <nav class="sidebar-nav">
@@ -361,7 +361,7 @@
     
     <!-- 控制面板 -->
     <div class="control-panel">
-        <h3>🌙 月球探索控制台</h3>
+        <h3>🌍 地球控制台</h3>
         
         <div class="control-group">
             <button class="btn" id="toggle-rotation">⏯️ 启停自转</button>
@@ -385,8 +385,8 @@
         
         <div class="control-group">
             <div class="toggle-row">
-                <span class="toggle-label">显示地球</span>
-                <div class="toggle active" id="toggle-earth"></div>
+                <span class="toggle-label">显示月球</span>
+                <div class="toggle active" id="toggle-moon"></div>
             </div>
         </div>
         
@@ -400,26 +400,30 @@
     
     <!-- 信息面板 -->
     <div class="info-panel">
-        <h4>🌍 月球环境信息</h4>
+        <h4>🌍 地球环境信息</h4>
         <div class="info-row">
-            <span>距离地球</span>
-            <span>384,400 km</span>
+            <span>赤道半径</span>
+            <span>6,371 km</span>
+        </div>
+        <div class="info-row">
+            <span>距太阳</span>
+            <span>1.496 亿 km</span>
         </div>
         <div class="info-row">
             <span>表面温度</span>
-            <span>-20°C ~ -170°C</span>
-        </div>
-        <div class="info-row">
-            <span>重力加速度</span>
-            <span>1.62 m/s²</span>
+            <span>-89°C ~ 58°C</span>
         </div>
         <div class="info-row">
             <span>自转周期</span>
-            <span>27.3 天</span>
+            <span>23 时 56 分</span>
         </div>
         <div class="info-row">
             <span>公转周期</span>
-            <span>27.3 天</span>
+            <span>365.25 天</span>
+        </div>
+        <div class="info-row">
+            <span>天然卫星</span>
+            <span>1 颗（月球）</span>
         </div>
     </div>
 
@@ -433,7 +437,7 @@
             rotationEnabled: true,
             timeSpeed: 1.0,
             starsEnabled: true,
-            earthEnabled: true,
+            moonEnabled: true,
             autoRotate: true
         };
         
@@ -448,7 +452,7 @@
             0.1,
             1000
         );
-        // 相机位置：保证半径 5 的完整月球球体完整入镜，并留出星空与地球的空间
+        // 相机位置：保证半径 5 的完整地球球体完整入镜，并留出星空与远景月球的空间
         camera.position.set(10, 5, 10);
         
         // 渲染器（开启抗锯齿）
@@ -465,7 +469,7 @@
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        // 最小距离需大于月球半径（5），避免相机穿进球体内部
+        // 最小距离需大于地球半径（5），避免相机穿进球体内部
         controls.minDistance = 7;
         controls.maxDistance = 30;
         controls.maxPolarAngle = Math.PI / 2.1;
@@ -482,10 +486,10 @@
         sunLight.position.set(50, 20, 30);
         scene.add(sunLight);
         
-        // 补光（地球反射光，非常弱）
-        const earthLight = new THREE.DirectionalLight(0x4444aa, 0.05);
-        earthLight.position.set(-20, 10, -20);
-        scene.add(earthLight);
+        // 补光（远景月球反射光，非常弱）
+        const moonLight = new THREE.DirectionalLight(0x4444aa, 0.05);
+        moonLight.position.set(-20, 10, -20);
+        scene.add(moonLight);
         
         // ==================== 星空背景 ====================
         const starsGeometry = new THREE.BufferGeometry();
@@ -520,21 +524,149 @@
         const stars = new THREE.Points(starsGeometry, starsMaterial);
         scene.add(stars);
         
-        // ==================== 月球本体（完整球体） ====================
-        // 关键：月海、月壤、陨石坑全部由「3D 空间噪声」生成，
-        // 不依赖任何 UV 贴图坐标，因此球体完整连续、无接缝、无极点拉伸、无纹理变形。
-        const MOON_RADIUS = 5;
-        
+        // ==================== 纹理资源（NASA 地球贴图） ====================
+        // 贴图来源与授权：
+        //   · 日间  earth_daymap.jpg  — NASA "Blue Marble: Next Generation"
+        //     https://visibleearth.nasa.gov/collection/1484/blue-marble-next-generation
+        //     原始分辨率 5400x2700（另有 21600x10800 可选），等距圆柱投影 2:1，公有领域（Public Domain）
+        //   · 夜间  earth_nightmap.jpg — NASA "Black Marble"（Suomi NPP / VIIRS, 2012）
+        //     https://earthobservatory.nasa.gov/features/NightLights
+        //     原始分辨率 3600x1800，公有领域
+        //   · 云层 / 法线 / 高光 — three.js 官方示例（基于 NASA 数据制作）
+        //     https://github.com/mrdoob/three.js/tree/dev/examples/textures/planets
+        //   注：NASA 官方图片服务器（eoimages.gsfc.nasa.gov）不返回 CORS 响应头，
+        //       直接外链会令 WebGL 纹理加载失败，故统一下载至 assets/textures/ 由本站托管。
+        const EARTH_RADIUS = 5;
+        const texLoader = new THREE.TextureLoader();
+
+        const earthDayTex    = texLoader.load('assets/textures/earth_daymap.jpg');
+        const earthNightTex  = texLoader.load('assets/textures/earth_nightmap.jpg');
+        const earthNormalTex = texLoader.load('assets/textures/earth_normal.jpg');
+        const earthSpecTex   = texLoader.load('assets/textures/earth_specular.jpg');
+        const earthCloudTex  = texLoader.load('assets/textures/earth_clouds.png');
+
+        // 色彩管理：渲染器输出 sRGB，颜色类贴图按 sRGB 解码，光照在线性空间计算。
+        // 这是"海洋与陆地明暗自然"的关键，可避免整体偏暗或冰盖/云层高光溢出。
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        const maxAniso = renderer.capabilities.getMaxAnisotropy();
+        [earthDayTex, earthNightTex, earthNormalTex, earthSpecTex, earthCloudTex].forEach((t) => {
+            t.anisotropy = maxAniso;
+            // 经度方向用重复采样，消除 u=0/1（180°W 与 180°E）拼接处可能出现的细缝
+            t.wrapS = THREE.RepeatWrapping;
+        });
+        // 颜色类贴图按 sRGB 解码；法线/高光贴图保持线性
+        [earthDayTex, earthNightTex, earthCloudTex].forEach((t) => { t.encoding = THREE.sRGBEncoding; });
+
+        // ==================== 中央天体：地球 ====================
+        // 保留原月球球体的几何参数（半径 5、200x200 分段）与位置 (0,0,0)，仅替换表面材质：
+        //  · SphereGeometry 的默认 UV 本身就是等距圆柱（equirectangular）映射：
+        //    uv.y = 1（贴图顶部）对应 y = +R（北极），u 0..1 对应经度 -180°..+180°，
+        //    因此 NASA 贴图可直接贴上：南北极自动对齐，经度无缝衔接，无极点拉伸。
+        //  · 地表凹凸改由 normalMap 表达，不做顶点位移（地球从太空看是光滑球体）。
+        const earthGeometry = new THREE.SphereGeometry(EARTH_RADIUS, 200, 200);
+
+        const earthMaterial = new THREE.MeshPhongMaterial({
+            map: earthDayTex,                                  // 昼面彩色贴图（海洋+陆地）
+            normalMap: earthNormalTex,                         // 地形凹凸
+            normalScale: new THREE.Vector2(0.8, 0.8),
+            specularMap: earthSpecTex,                         // 高光只出现在海洋
+            // three.js 的 D_BlinnPhong 会把高光峰值放大约 (shininess*0.5+1)*0.25 倍，
+            // 这里刻意用很暗的反射色，避免海洋镜面反射过曝成白斑
+            specular: new THREE.Color(0x060809),
+            shininess: 72,
+            emissive: new THREE.Color(0xffffff),
+            emissiveMap: earthNightTex,                        // 夜面城市灯光
+            emissiveIntensity: 1.0
+        });
+
+        // 夜间灯光只在背光面点亮：向 Phong shader 注入昼夜判定
+        earthMaterial.onBeforeCompile = (shader) => {
+            shader.uniforms.uSunDir = { value: new THREE.Vector3(1, 1, 1) };
+            earthMaterial.userData.shader = shader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <common>',
+                '#include <common>\nuniform vec3 uSunDir;'
+            );
+            shader.fragmentShader = shader.fragmentShader.replace(
+                '#include <emissivemap_fragment>',
+                `#include <emissivemap_fragment>
+                 float sunFacing = dot(normalize(vNormal), normalize(uSunDir));
+                 float nightMask = smoothstep(0.2, -0.25, sunFacing);
+                 totalEmissiveRadiance *= nightMask * 1.7;`
+            );
+        };
+
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        earth.position.set(0, 0, 0);
+        scene.add(earth);
+
+        // 云层：略大于地表的透明球壳，独立缓慢漂移
+        const cloudMaterial = new THREE.MeshPhongMaterial({
+            map: earthCloudTex,
+            transparent: true,
+            opacity: 0.9,
+            depthWrite: false,
+            specular: new THREE.Color(0x000000),
+            shininess: 0
+        });
+        const earthClouds = new THREE.Mesh(
+            new THREE.SphereGeometry(EARTH_RADIUS * 1.012, 128, 128),
+            cloudMaterial
+        );
+        earthClouds.renderOrder = 1;
+        earth.add(earthClouds);
+
+        // 大气光晕：贴着地球边缘的薄层蓝色辉光，向阳面更亮
+        const atmosphereMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                uSunDir: { value: new THREE.Vector3(0, 0, 1) }
+            },
+            vertexShader: `
+                varying vec3 vNrm;
+                void main() {
+                    vNrm = normalize(normalMatrix * normal);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform vec3 uSunDir;
+                varying vec3 vNrm;
+                void main() {
+                    vec3 n = normalize(vNrm);
+                    float rim = pow(clamp(1.0 - abs(n.z), 0.0, 1.0), 3.0);
+                    float sunFace = max(dot(n, normalize(uSunDir)), 0.0);
+                    float glow = rim * (0.15 + 0.85 * sunFace);
+                    vec3 col = vec3(0.30, 0.55, 1.0) * glow;
+                    col = pow(max(col, vec3(0.0)), vec3(0.4545));
+                    gl_FragColor = vec4(col, glow);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const earthAtmosphere = new THREE.Mesh(
+            new THREE.SphereGeometry(EARTH_RADIUS * 1.07, 96, 96),
+            atmosphereMaterial
+        );
+        earthAtmosphere.renderOrder = 2;
+        earth.add(earthAtmosphere);
+
+        // ==================== 远景天体：月球（程序化生成） ====================
+        // 月海、月壤、陨石坑全部由「3D 空间噪声」按顶点的 3D 方向生成，不依赖 UV 坐标，
+        // 球体完整连续、无接缝、无极点拉伸。顶点颜色按 sRGB→线性转换以适配上面的色彩管理。
+        const MOON_RADIUS = 4;
+
         // ---------- 3D 程序化噪声工具 ----------
         const fract = (v) => v - Math.floor(v);
         const clamp01 = (v) => v < 0 ? 0 : (v > 1 ? 1 : v);
         const lerp = (a, b, t) => a + (b - a) * t;
-        
+
         function smoothstep(e0, e1, x) {
             const t = clamp01((x - e0) / (e1 - e0));
             return t * t * (3 - 2 * t);
         }
-        
+
         // 3D value noise 的哈希
         function hash31(x, y, z) {
             const px = fract(x * 0.3183099 + 0.1) * 17.0;
@@ -542,7 +674,7 @@
             const pz = fract(z * 0.3183099 + 0.3) * 17.0;
             return fract(px * py * pz * (px + py + pz));
         }
-        
+
         // 三线性插值的 3D value noise
         function noise3(x, y, z) {
             const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
@@ -558,7 +690,7 @@
             const x01 = lerp(c001, c101, fx), x11 = lerp(c011, c111, fx);
             return lerp(lerp(x00, x10, fy), lerp(x01, x11, fy), fz);
         }
-        
+
         // 分形布朗运动：多倍频叠加出自然的月面起伏
         function fbm3(x, y, z, octaves) {
             let v = 0, a = 0.5;
@@ -569,7 +701,7 @@
             }
             return v;
         }
-        
+
         // Voronoi 特征点哈希
         function hash33(x, y, z) {
             const p1 = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453123;
@@ -577,7 +709,7 @@
             const p3 = Math.sin(x * 113.5 + y * 271.9 + z * 124.6) * 43758.5453123;
             return [fract(p1), fract(p2), fract(p3)];
         }
-        
+
         // 3D Voronoi F1：到最近特征点的距离，用于生成圆形陨石坑
         function voronoiF1(x, y, z) {
             const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z);
@@ -597,7 +729,7 @@
             }
             return Math.sqrt(f1);
         }
-        
+
         // 陨石坑场：bowl = 坑底凹陷强度，rim = 坑缘隆起强度
         function craterField(nx, ny, nz, scale) {
             const d = voronoiF1(nx * scale, ny * scale, nz * scale);
@@ -606,178 +738,84 @@
                 rim: smoothstep(0.20, 0.30, d) * (1 - smoothstep(0.30, 0.42, d))
             };
         }
-        
+
         // ---------- 构建完整月球球体 ----------
         // SphereGeometry 生成完整闭合球面，无裁剪面、无半球参数
-        const MOON_SEG = 200;
+        const MOON_SEG = 128;
         const moonGeometry = new THREE.SphereGeometry(MOON_RADIUS, MOON_SEG, MOON_SEG);
-        
+
         // 表面属性按「顶点的 3D 方向」计算，而非 UV，
         // 因此经度接缝处与南北两极都不会出现拉伸、错位或断裂
         const moonPos = moonGeometry.attributes.position;
         const moonColors = new Float32Array(moonPos.count * 3);
-        
+
         const C_REGOLITH = [0.63, 0.61, 0.58];  // 月壤亮灰
         const C_MARE = [0.29, 0.29, 0.32];      // 月海暗灰
-        
+
+        // 渲染器已切换为 sRGB 输出，顶点色需先转为线性值，才能保持设计时的明暗观感
+        const toLinear = (c) => Math.pow(clamp01(c), 2.2);
+
         for (let i = 0; i < moonPos.count; i++) {
             const vx = moonPos.getX(i), vy = moonPos.getY(i), vz = moonPos.getZ(i);
             const len = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1;
             const nx = vx / len, ny = vy / len, nz = vz / len;
-            
+
             // 月海（大尺度暗区）
             const mare = fbm3(nx * 1.3 + 11.2, ny * 1.3 + 11.2, nz * 1.3 + 11.2, 4);
             const mareMask = smoothstep(0.46, 0.63, mare);
-            
+
             // 月壤颗粒细节
             const rego = fbm3(nx * 8.0 + 3.7, ny * 8.0 + 3.7, nz * 8.0 + 3.7, 4);
-            
+
             // 大小两层陨石坑
             const bigCrater = craterField(nx, ny, nz, 2.6);
             const smallCrater = craterField(nx, ny, nz, 7.5);
-            
+
             // 沿法线方向的高度位移
             let h = 0;
             h += (rego - 0.5) * 0.055;                                 // 月壤起伏
             h -= bigCrater.bowl * 0.085 + smallCrater.bowl * 0.030;    // 坑底凹陷
             h += bigCrater.rim * 0.040 + smallCrater.rim * 0.016;      // 坑缘隆起
             h -= mareMask * 0.020;                                     // 月海略低洼
-            
+
             const rr = MOON_RADIUS * (1 + h);
             moonPos.setXYZ(i, nx * rr, ny * rr, nz * rr);
-            
+
             // 顶点着色
             let cr = lerp(C_REGOLITH[0], C_MARE[0], mareMask * 0.85);
             let cg = lerp(C_REGOLITH[1], C_MARE[1], mareMask * 0.85);
             let cb = lerp(C_REGOLITH[2], C_MARE[2], mareMask * 0.85);
-            
+
             // 坑底偏暗、坑缘被阳光照亮偏亮
             const shade = -(bigCrater.bowl * 0.16 + smallCrater.bowl * 0.07)
                         + (bigCrater.rim * 0.11 + smallCrater.rim * 0.045);
             cr += shade; cg += shade; cb += shade;
-            
+
             // 细颗粒感
             const grain = (rego - 0.5) * 0.07;
             cr += grain; cg += grain; cb += grain;
-            
-            moonColors[i * 3] = clamp01(cr);
-            moonColors[i * 3 + 1] = clamp01(cg);
-            moonColors[i * 3 + 2] = clamp01(cb);
+
+            moonColors[i * 3]     = toLinear(cr);
+            moonColors[i * 3 + 1] = toLinear(cg);
+            moonColors[i * 3 + 2] = toLinear(cb);
         }
-        
+
         // 位移后重算法线，保证太阳光下明暗过渡与陨石坑立体感正确
         moonGeometry.computeVertexNormals();
         moonGeometry.setAttribute('color', new THREE.BufferAttribute(moonColors, 3));
-        
+
         // 月壤材质：灰色、极粗糙、无金属反射
         const moonMaterial = new THREE.MeshStandardMaterial({
             vertexColors: true,
             roughness: 0.93,
             metalness: 0.0
         });
-        
+
         const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-        moon.position.set(0, 0, 0);
+        // 位于地球远侧偏上（相机初始在 (10,5,10) 看向原点），保证初始视角下完整可见
+        moon.position.set(-20, 8, -36);
         scene.add(moon);
-        
-        // ==================== 地球（NASA 真实贴图） ====================
-        // 贴图来源：
-        //   日间 earth_daymap.jpg   — NASA Blue Marble: Next Generation（Visible Earth）
-        //   夜间 earth_nightmap.jpg — NASA Black Marble（Suomi NPP / VIIRS）
-        //   云层 / 法线 / 高光      — three.js 官方示例（基于 NASA 数据制作）
-        // 全部为公有领域或公有领域派生，本地托管以避免跨域（NASA 官方服务器不返回 CORS 头）。
-        const EARTH_RADIUS = 6;
-        const texLoader = new THREE.TextureLoader();
-        
-        const earthDayTex = texLoader.load('assets/textures/earth_daymap.jpg');
-        const earthNightTex = texLoader.load('assets/textures/earth_nightmap.jpg');
-        const earthNormalTex = texLoader.load('assets/textures/earth_normal.jpg');
-        const earthSpecTex = texLoader.load('assets/textures/earth_specular.jpg');
-        const earthCloudTex = texLoader.load('assets/textures/earth_clouds.png');
-        
-        // 各向异性过滤 + sRGB 编码，斜视角清晰、色彩准确
-        const maxAniso = renderer.capabilities.getMaxAnisotropy();
-        [earthDayTex, earthNightTex, earthNormalTex, earthSpecTex, earthCloudTex].forEach((t) => {
-            t.anisotropy = maxAniso;
-        });
-        earthDayTex.encoding = THREE.sRGBEncoding;
-        earthNightTex.encoding = THREE.sRGBEncoding;
-        
-        // 地球本体：日间贴图 + 法线凹凸 + 海洋高光 + 夜间城市灯光
-        const earthMaterial = new THREE.MeshPhongMaterial({
-            map: earthDayTex,
-            normalMap: earthNormalTex,
-            normalScale: new THREE.Vector2(0.65, 0.65),
-            specularMap: earthSpecTex,
-            specular: new THREE.Color(0x2a3a4a),
-            shininess: 16,
-            emissive: new THREE.Color(0xffffff),
-            emissiveMap: earthNightTex,
-            emissiveIntensity: 1.0
-        });
-        
-        // 夜间灯光只在背光面点亮：向 shader 注入昼夜判定
-        earthMaterial.onBeforeCompile = (shader) => {
-            shader.uniforms.uSunDir = { value: new THREE.Vector3(1, 1, 1) };
-            earthMaterial.userData.shader = shader;
-            shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <common>',
-                '#include <common>\nuniform vec3 uSunDir;'
-            );
-            shader.fragmentShader = shader.fragmentShader.replace(
-                '#include <emissivemap_fragment>',
-                `#include <emissivemap_fragment>
-                 float sunFacing = dot(normalize(vNormal), normalize(uSunDir));
-                 float nightMask = smoothstep(0.2, -0.25, sunFacing);
-                 totalEmissiveRadiance *= nightMask * 1.7;`
-            );
-        };
-        
-        const earthGeometry = new THREE.SphereGeometry(EARTH_RADIUS, 128, 128);
-        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-        earth.position.set(-26, 20, -42);
-        scene.add(earth);
-        
-        // 云层：略大于地球的透明球壳，独立缓慢漂移
-        const cloudMaterial = new THREE.MeshPhongMaterial({
-            map: earthCloudTex,
-            transparent: true,
-            opacity: 0.75,
-            depthWrite: false
-        });
-        const earthClouds = new THREE.Mesh(
-            new THREE.SphereGeometry(EARTH_RADIUS * 1.015, 96, 96),
-            cloudMaterial
-        );
-        earth.add(earthClouds);
-        
-        // 大气光晕：沿地球边缘的蓝色辉光
-        const glowGeometry = new THREE.SphereGeometry(EARTH_RADIUS * 1.14, 64, 64);
-        const glowMaterial = new THREE.ShaderMaterial({
-            uniforms: {
-                time: { value: 0 }
-            },
-            vertexShader: `
-                varying vec3 vNormal;
-                void main() {
-                    vNormal = normalize(normalMatrix * normal);
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-            fragmentShader: `
-                varying vec3 vNormal;
-                void main() {
-                    float intensity = pow(0.62 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 2.0);
-                    gl_FragColor = vec4(0.35, 0.62, 1.0, intensity * 0.7);
-                }
-            `,
-            transparent: true,
-            blending: THREE.AdditiveBlending
-        });
-        
-        const earthGlow = new THREE.Mesh(glowGeometry, glowMaterial);
-        earth.add(earthGlow);
-        
+
         // 每帧用于把太阳方向转到相机视图空间
         const sunDirView = new THREE.Vector3();
         
@@ -790,22 +828,23 @@
             const time = clock.getElapsedTime();
             const delta = clock.getDelta();
             
-            // 月球自转（完整球体绕自身轴旋转）
+            // 远景月球自转
             if (state.rotationEnabled) {
                 moon.rotation.y += 0.0005 * state.timeSpeed;
             }
-            
+
             // 地球自转
             earth.rotation.y += 0.001 * state.timeSpeed;
-            
+
             // 云层相对地球缓慢漂移，增加层次感
             earthClouds.rotation.y += 0.0004 * state.timeSpeed;
-            
-            // 把太阳方向转换到相机视图空间，驱动地球的昼夜分界
+
+            // 把太阳方向转换到相机视图空间，驱动地球的昼夜分界与大气光晕
+            sunDirView.copy(sunLight.position).normalize().transformDirection(camera.matrixWorldInverse);
             if (earthMaterial.userData.shader) {
-                sunDirView.copy(sunLight.position).normalize().transformDirection(camera.matrixWorldInverse);
                 earthMaterial.userData.shader.uniforms.uSunDir.value.copy(sunDirView);
             }
+            atmosphereMaterial.uniforms.uSunDir.value.copy(sunDirView);
             
             // 星空缓慢旋转
             if (state.starsEnabled) {
@@ -844,11 +883,11 @@
             stars.visible = state.starsEnabled;
         });
         
-        // 地球开关
-        document.getElementById('toggle-earth').addEventListener('click', (e) => {
-            state.earthEnabled = !state.earthEnabled;
+        // 月球开关（远景天体）
+        document.getElementById('toggle-moon').addEventListener('click', (e) => {
+            state.moonEnabled = !state.moonEnabled;
             e.target.classList.toggle('active');
-            earth.visible = state.earthEnabled;
+            moon.visible = state.moonEnabled;
         });
         
         // 自动旋转开关
@@ -886,9 +925,9 @@
                     stars.visible = state.starsEnabled;
                     break;
                 case 'e':
-                    state.earthEnabled = !state.earthEnabled;
-                    document.getElementById('toggle-earth').classList.toggle('active');
-                    earth.visible = state.earthEnabled;
+                    state.moonEnabled = !state.moonEnabled;
+                    document.getElementById('toggle-moon').classList.toggle('active');
+                    moon.visible = state.moonEnabled;
                     break;
             }
         });
