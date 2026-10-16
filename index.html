@@ -3,63 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solon-AI 学习手册</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <title>Solon-AI 学习手册 - 大模型算力集群</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        
+        /* 玻璃态侧边栏 */
+        .sidebar {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            bottom: 20px;
+            width: 280px;
+            background: rgba(10, 15, 30, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            z-index: 10;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 24px;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .sidebar-header p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+        
+        .nav-section {
+            margin-bottom: 20px;
+        }
+        
+        .nav-section h3 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .nav-section ul {
+            list-style: none;
+        }
+        
+        .nav-section li {
+            margin-bottom: 6px;
+        }
+        
+        .nav-section a {
+            display: block;
+            padding: 10px 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .nav-section a:hover {
+            background: rgba(96, 165, 250, 0.15);
+            border-color: rgba(96, 165, 250, 0.3);
+            color: #fff;
+        }
+        
+        .sidebar-footer {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 12px;
+        }
+        
+        /* 控制面板 */
+        .control-panel {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            width: 260px;
+            background: rgba(10, 15, 30, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 10;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        
+        .control-panel h3 {
+            font-size: 14px;
+            margin-bottom: 16px;
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .control-group {
+            margin-bottom: 16px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .slider-container input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+        }
+        
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 36px;
+            text-align: right;
+        }
+        
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+        
+        .toggle-label {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle.active {
+            background: #3b82f6;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        
+        .toggle.active::after {
+            transform: translateX(20px);
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            padding: 16px;
+            background: rgba(10, 15, 30, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+        
+        .tooltip.visible {
+            opacity: 1;
+        }
+        
+        .tooltip h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            color: #60a5fa;
+        }
+        
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        
+        .tooltip-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .tooltip-value {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+        
+        .tooltip-bar {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+        
+        .tooltip-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+        
+        /* 选中高亮效果 */
+        .highlight-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: rgba(10, 15, 30, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            border-radius: 12px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        
+        .highlight-indicator.visible {
+            opacity: 1;
+        }
+        
+        /* 滚动条样式 */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
 </head>
 <body>
-    <!-- Sidebar -->
+    <!-- Three.js 画布容器 -->
+    <div id="canvas-container"></div>
+    
+    <!-- 侧边栏导航 -->
     <aside class="sidebar">
         <div class="sidebar-header">
             <h1>🛡️ Solon-AI</h1>
-            <p>学习手册</p>
+            <p>学习手册 - 算力集群可视化</p>
         </div>
         
         <nav class="sidebar-nav">
             <div class="nav-section">
                 <h3>第一阶段：基础入门</h3>
                 <ul>
-                    <li><a href="chapters/01.html" data-chapter="1">第1章 框架概览与环境搭建</a></li>
-                    <li><a href="chapters/02.html" data-chapter="2">第2章 ChatModel 与 LLM 调用</a></li>
-                    <li><a href="chapters/03.html" data-chapter="3">第3章 提示词工程与对话管理</a></li>
-                    <li><a href="chapters/04.html" data-chapter="4">第4章 工具（Tool）基础</a></li>
+                    <li><a href="chapters/01.html">第1章 框架概览与环境搭建</a></li>
+                    <li><a href="chapters/02.html">第2章 ChatModel 与 LLM 调用</a></li>
+                    <li><a href="chapters/03.html">第3章 提示词工程与对话管理</a></li>
+                    <li><a href="chapters/04.html">第4章 工具（Tool）基础</a></li>
                 </ul>
             </div>
             
             <div class="nav-section">
                 <h3>第二阶段：核心进阶</h3>
                 <ul>
-                    <li><a href="chapters/05.html" data-chapter="5">第5章 RAG 知识库全链路</a></li>
-                    <li><a href="chapters/06.html" data-chapter="6">第6章 Agent 智能体</a></li>
-                    <li><a href="chapters/07.html" data-chapter="7">第7章 MCP 协议深度集成</a></li>
-                    <li><a href="chapters/08.html" data-chapter="8">第8章 AI Flow 低代码编排</a></li>
-                    <li><a href="chapters/09.html" data-chapter="9">第9章 Talents 能力插件体系</a></li>
+                    <li><a href="chapters/05.html">第5章 RAG 知识库全链路</a></li>
+                    <li><a href="chapters/06.html">第6章 Agent 智能体</a></li>
+                    <li><a href="chapters/07.html">第7章 MCP 协议深度集成</a></li>
+                    <li><a href="chapters/08.html">第8章 AI Flow 低代码编排</a></li>
+                    <li><a href="chapters/09.html">第9章 Talents 能力插件体系</a></li>
                 </ul>
             </div>
             
             <div class="nav-section">
                 <h3>第三阶段：高级实战</h3>
                 <ul>
-                    <li><a href="chapters/10.html" data-chapter="10">第10章 多智能体协作系统</a></li>
-                    <li><a href="chapters/11.html" data-chapter="11">第11章 企业级 RAG 应用</a></li>
-                    <li><a href="chapters/12.html" data-chapter="12">第12章 MCP 网关与服务治理</a></li>
-                    <li><a href="chapters/13.html" data-chapter="13">第13章 综合项目实战：智能客服平台</a></li>
+                    <li><a href="chapters/10.html">第10章 多智能体协作系统</a></li>
+                    <li><a href="chapters/11.html">第11章 企业级 RAG 应用</a></li>
+                    <li><a href="chapters/12.html">第12章 MCP 网关与服务治理</a></li>
+                    <li><a href="chapters/13.html">第13章 综合项目实战：智能客服平台</a></li>
                 </ul>
             </div>
+            
             <div class="nav-section">
                 <h3>第四阶段：实战应用</h3>
                 <ul>
-                    <li><a href="chapters/14.html" data-chapter="14">第14章 企业知识库与智能文档处理平台</a></li>
-                    <li><a href="chapters/15.html" data-chapter="15">第15章 代码智能助手与研发效能平台</a></li>
-                    <li><a href="chapters/16.html" data-chapter="16">第16章 数据智能分析与决策支持系统</a></li>
-                    <li><a href="chapters/17.html" data-chapter="17">第17章 IoT/智能硬件监控与诊断平台</a></li>
-                    <li><a href="chapters/18.html" data-chapter="18">第18章 GIS空间数据智能分析平台</a></li>
+                    <li><a href="chapters/14.html">第14章 企业知识库与智能文档处理平台</a></li>
+                    <li><a href="chapters/15.html">第15章 代码智能助手与研发效能平台</a></li>
+                    <li><a href="chapters/16.html">第16章 数据智能分析与决策支持系统</a></li>
+                    <li><a href="chapters/17.html">第17章 IoT/智能硬件监控与诊断平台</a></li>
+                    <li><a href="chapters/18.html">第18章 GIS空间数据智能分析平台</a></li>
                 </ul>
             </div>
+            
             <div class="nav-section">
                 <h3>第五阶段：综合实战</h3>
                 <ul>
-                    <li><a href="chapters/19.html" data-chapter="19">第19章 面向公共安全领域的垂直大模型与行业智能体</a></li>
+                    <li><a href="chapters/19.html">第19章 面向公共安全领域的垂直大模型与行业智能体</a></li>
                 </ul>
             </div>
         </nav>
@@ -68,24 +410,513 @@
             <p>版本: 4.1.1 | JDK 8+</p>
         </div>
     </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="content-wrapper">
-            <!-- Will be populated by JavaScript -->
-            <div id="chapter-content"></div>
+    
+    <!-- 控制面板 -->
+    <div class="control-panel">
+        <h3>⚡ 算力集群控制台</h3>
+        
+        <div class="control-group">
+            <button class="btn" id="toggle-pulse">⏯️ 启停数据流脉冲</button>
+            <button class="btn secondary" id="reset-camera">📷 重置相机视角</button>
         </div>
-    </main>
-
-    <!-- Search Modal -->
-    <div id="search-modal" class="search-modal">
-        <div class="search-container">
-            <input type="text" id="search-input" placeholder="搜索章节..." autofocus>
-            <div id="search-results" class="search-results"></div>
+        
+        <div class="control-group">
+            <label>数据流速度</label>
+            <div class="slider-container">
+                <input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1">
+                <span class="slider-value" id="speed-value">1.0x</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <div class="toggle-row">
+                <span class="toggle-label">网格背景</span>
+                <div class="toggle active" id="toggle-grid"></div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <div class="toggle-row">
+                <span class="toggle-label">节点自动旋转</span>
+                <div class="toggle active" id="toggle-rotate"></div>
+            </div>
         </div>
     </div>
+    
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+        <h4 id="tooltip-title">服务器节点</h4>
+        <div class="tooltip-row">
+            <span class="tooltip-label">节点 ID</span>
+            <span class="tooltip-value" id="tooltip-id">-</span>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">算力状态</span>
+            <span class="tooltip-value" id="tooltip-status">-</span>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">GPU 利用率</span>
+            <span class="tooltip-value" id="tooltip-gpu">-</span>
+        </div>
+        <div class="tooltip-bar">
+            <div class="tooltip-bar-fill" id="tooltip-gpu-bar" style="width: 0%"></div>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">显存占用</span>
+            <span class="tooltip-value" id="tooltip-vram">-</span>
+        </div>
+        <div class="tooltip-bar">
+            <div class="tooltip-bar-fill" id="tooltip-vram-bar" style="width: 0%"></div>
+        </div>
+        <div class="tooltip-row">
+            <span class="tooltip-label">当前任务</span>
+            <span class="tooltip-value" id="tooltip-task">-</span>
+        </div>
+    </div>
+    
+    <!-- 选中指示器 -->
+    <div class="highlight-indicator" id="highlight-indicator">
+        已选中节点: <span id="selected-node-name">-</span>
+    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // ==================== 全局状态 ====================
+        const state = {
+            pulseEnabled: true,
+            pulseSpeed: 1.0,
+            gridEnabled: true,
+            autoRotate: true,
+            selectedNode: null,
+            mouseX: 0,
+            mouseY: 0
+        };
+        
+        // ==================== Three.js 初始化 ====================
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        
+        // 相机
+        const camera = new THREE.PerspectiveCamera(
+            60,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            1000
+        );
+        camera.position.set(15, 12, 15);
+        
+        // 渲染器（开启抗锯齿）
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x0a0f1e, 1);
+        container.appendChild(renderer.domElement);
+        
+        // 轨道控制器
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 8;
+        controls.maxDistance = 40;
+        controls.maxPolarAngle = Math.PI / 2.1;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        
+        // ==================== 灯光 ====================
+        // 环境光
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+        scene.add(ambientLight);
+        
+        // 主方向光
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(10, 20, 10);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+        
+        // 补光
+        const fillLight = new THREE.DirectionalLight(0x3b82f6, 0.4);
+        fillLight.position.set(-10, 10, -10);
+        scene.add(fillLight);
+        
+        // 底部反弹光
+        const bounceLight = new THREE.DirectionalLight(0x8b5cf6, 0.3);
+        bounceLight.position.set(0, -5, 0);
+        scene.add(bounceLight);
+        
+        // ==================== 网格背景 ====================
+        const gridHelper = new THREE.GridHelper(50, 50, 0x1e3a5f, 0x0f172a);
+        gridHelper.position.y = -6;
+        scene.add(gridHelper);
+        
+        // 添加一个更大的淡出网格
+        const largeGrid = new THREE.GridHelper(100, 100, 0x1e3a5f, 0x0f172a);
+        largeGrid.position.y = -6;
+        largeGrid.material.opacity = 0.3;
+        largeGrid.material.transparent = true;
+        scene.add(largeGrid);
+        
+        // ==================== 服务器节点 ====================
+        const nodes = [];
+        const nodeGroup = new THREE.Group();
+        scene.add(nodeGroup);
+        
+        // 节点配置
+        const nodeConfigs = [
+            { id: 'GPU-01', name: '算力节点 A1', x: 0, y: 0, z: 0, gpu: 92, vram: 78, task: '模型训练', status: '运行中' },
+            { id: 'GPU-02', name: '算力节点 A2', x: 5, y: 1, z: 3, gpu: 85, vram: 72, task: '推理服务', status: '运行中' },
+            { id: 'GPU-03', name: '算力节点 B1', x: -5, y: -0.5, z: 2, gpu: 67, vram: 58, task: '数据预处理', status: '运行中' },
+            { id: 'GPU-04', name: '算力节点 B2', x: 3, y: 1.5, z: -4, gpu: 45, vram: 38, task: '空闲', status: '待机' },
+            { id: 'GPU-05', name: '算力节点 C1', x: -3, y: 0.5, z: -5, gpu: 88, vram: 81, task: '模型训练', status: '运行中' },
+            { id: 'GPU-06', name: '算力节点 C2', x: 6, y: -1, z: -2, gpu: 73, vram: 65, task: '微调任务', status: '运行中' },
+            { id: 'GPU-07', name: '算力节点 D1', x: -6, y: 1, z: -3, gpu: 56, vram: 49, task: '推理服务', status: '运行中' },
+            { id: 'GPU-08', name: '算力节点 D2', x: 2, y: 2, z: 5, gpu: 34, vram: 28, task: '空闲', status: '待机' },
+            { id: 'GPU-09', name: '算力节点 E1', x: -4, y: -1.5, z: -6, gpu: 91, vram: 84, task: '模型训练', status: '运行中' },
+            { id: 'GPU-10', name: '算力节点 E2', x: 7, y: 0, z: 1, gpu: 62, vram: 55, task: '数据预处理', status: '运行中' },
+            { id: 'GPU-11', name: '算力节点 F1', x: -7, y: 0.5, z: 0, gpu: 78, vram: 70, task: '推理服务', status: '运行中' },
+            { id: 'GPU-12', name: '算力节点 F2', x: 4, y: -2, z: -6, gpu: 41, vram: 35, task: '空闲', status: '待机' }
+        ];
+        
+        // 创建金属材质
+        const metalMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4a5568,
+            metalness: 0.8,
+            roughness: 0.2,
+        });
+        
+        // 创建服务器节点
+        nodeConfigs.forEach((config, index) => {
+            // 主节点（服务器机箱）
+            const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+            const node = new THREE.Mesh(geometry, metalMaterial.clone());
+            node.position.set(config.x, config.y, config.z);
+            node.userData = {
+                ...config,
+                index: index,
+                baseY: config.y,
+                phase: Math.random() * Math.PI * 2,
+                floatSpeed: 0.3 + Math.random() * 0.3,
+                swayAmount: 0.1 + Math.random() * 0.1,
+                swaySpeed: 0.2 + Math.random() * 0.2
+            };
+            
+            // 添加发光边缘
+            const edges = new THREE.EdgesGeometry(geometry);
+            const lineMaterial = new THREE.LineBasicMaterial({
+                color: 0x3b82f6,
+                transparent: true,
+                opacity: 0.6
+            });
+            const wireframe = new THREE.LineSegments(edges, lineMaterial);
+            node.add(wireframe);
+            
+            // 添加顶部指示灯
+            const indicatorGeometry = new THREE.SphereGeometry(0.08, 16, 16);
+            const indicatorMaterial = new THREE.MeshBasicMaterial({
+                color: config.status === '运行中' ? 0x10b981 : 0xf59e0b
+            });
+            const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+            indicator.position.y = 0.65;
+            node.add(indicator);
+            
+            nodeGroup.add(node);
+            nodes.push(node);
+        });
+        
+        // ==================== 连接线（脉冲效果） ====================
+        const connections = [];
+        const connectionGroup = new THREE.Group();
+        scene.add(connectionGroup);
+        
+        // 连接关系（基于距离）
+        function getConnections() {
+            const conns = [];
+            for (let i = 0; i < nodes.length; i++) {
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const dist = nodes[i].position.distanceTo(nodes[j].position);
+                    if (dist < 8) {
+                        conns.push([i, j]);
+                    }
+                }
+            }
+            return conns;
+        }
+        
+        const connectionPairs = getConnections();
+        
+        // 创建脉冲连线
+        connectionPairs.forEach(([i, j]) => {
+            const start = nodes[i].position.clone();
+            const end = nodes[j].position.clone();
+            
+            // 创建曲线
+            const mid = start.clone().add(end).multiplyScalar(0.5);
+            mid.y += 0.5; // 微微上拱
+            
+            const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+            const points = curve.getPoints(50);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            
+            // 脉冲材质
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    color: { value: new THREE.Color(0x3b82f6) },
+                    speed: { value: 1.0 }
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float time;
+                    uniform vec3 color;
+                    uniform float speed;
+                    varying vec2 vUv;
+                    
+                    void main() {
+                        float pulse = fract(vUv.x * 3.0 - time * speed);
+                        float alpha = smoothstep(0.0, 0.2, pulse) * smoothstep(0.6, 0.4, pulse);
+                        alpha *= 0.6;
+                        gl_FragColor = vec4(color, alpha);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.AdditiveBlending
+            });
+            
+            const line = new THREE.Line(geometry, material);
+            line.userData = {
+                curve: curve,
+                baseSpeed: 0.5 + Math.random() * 0.5,
+                phase: Math.random() * Math.PI * 2
+            };
+            
+            connectionGroup.add(line);
+            connections.push(line);
+        });
+        
+        // ==================== 粒子系统（数据流） ====================
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 500;
+        const posArray = new Float32Array(particlesCount * 3);
+        
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 40;
+        }
+        
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x60a5fa,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        
+        // ==================== 交互 ====================
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let hoveredNode = null;
+        
+        // 鼠标移动
+        container.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            state.mouseX = event.clientX;
+            state.mouseY = event.clientY;
+        });
+        
+        // 鼠标点击
+        container.addEventListener('click', (event) => {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            if (intersects.length > 0) {
+                const node = intersects[0].object;
+                selectNode(node);
+            }
+        });
+        
+        // 选中节点
+        function selectNode(node) {
+            // 重置之前选中的节点
+            if (state.selectedNode) {
+                state.selectedNode.material.emissive.setHex(0x000000);
+                state.selectedNode.scale.set(1, 1, 1);
+            }
+            
+            state.selectedNode = node;
+            node.material.emissive.setHex(0x3b82f6);
+            node.scale.set(1.2, 1.2, 1.2);
+            
+            // 显示 tooltip
+            showTooltip(node.userData, state.mouseX, state.mouseY);
+            
+            // 显示选中指示器
+            const indicator = document.getElementById('highlight-indicator');
+            document.getElementById('selected-node-name').textContent = node.userData.name;
+            indicator.classList.add('visible');
+            
+            // 3秒后隐藏指示器
+            setTimeout(() => {
+                indicator.classList.remove('visible');
+            }, 3000);
+        }
+        
+        // Tooltip
+        const tooltip = document.getElementById('tooltip');
+        
+        function showTooltip(data, x, y) {
+            document.getElementById('tooltip-title').textContent = data.name;
+            document.getElementById('tooltip-id').textContent = data.id;
+            document.getElementById('tooltip-status').textContent = data.status;
+            document.getElementById('tooltip-gpu').textContent = data.gpu + '%';
+            document.getElementById('tooltip-gpu-bar').style.width = data.gpu + '%';
+            document.getElementById('tooltip-vram').textContent = data.vram + '%';
+            document.getElementById('tooltip-vram-bar').style.width = data.vram + '%';
+            document.getElementById('tooltip-task').textContent = data.task;
+            
+            tooltip.style.left = (x + 20) + 'px';
+            tooltip.style.top = (y + 20) + 'px';
+            tooltip.classList.add('visible');
+        }
+        
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+        
+        // 鼠标离开画布时隐藏tooltip
+        container.addEventListener('mouseleave', hideTooltip);
+        
+        // ==================== UI 控制 ====================
+        // 启停脉冲
+        document.getElementById('toggle-pulse').addEventListener('click', () => {
+            state.pulseEnabled = !state.pulseEnabled;
+            document.getElementById('toggle-pulse').textContent = 
+                state.pulseEnabled ? '⏯️ 停止数据流脉冲' : '▶️ 启动数据流脉冲';
+        });
+        
+        // 速度调节
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        speedSlider.addEventListener('input', (e) => {
+            state.pulseSpeed = parseFloat(e.target.value);
+            speedValue.textContent = state.pulseSpeed.toFixed(1) + 'x';
+        });
+        
+        // 网格开关
+        document.getElementById('toggle-grid').addEventListener('click', (e) => {
+            state.gridEnabled = !state.gridEnabled;
+            e.target.classList.toggle('active');
+            gridHelper.visible = state.gridEnabled;
+            largeGrid.visible = state.gridEnabled;
+        });
+        
+        // 自动旋转开关
+        document.getElementById('toggle-rotate').addEventListener('click', (e) => {
+            state.autoRotate = !state.autoRotate;
+            e.target.classList.toggle('active');
+            controls.autoRotate = state.autoRotate;
+        });
+        
+        // 重置相机
+        document.getElementById('reset-camera').addEventListener('click', () => {
+            camera.position.set(15, 12, 15);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+        
+        // ==================== 窗口自适应 ====================
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // ==================== 动画循环 ====================
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = clock.getElapsedTime();
+            const delta = clock.getDelta();
+            
+            // 更新节点动画（漂浮 + 摆动）
+            nodes.forEach((node, i) => {
+                const data = node.userData;
+                node.position.y = data.baseY + Math.sin(time * data.floatSpeed + data.phase) * 0.3;
+                node.rotation.x = Math.sin(time * data.swaySpeed + data.phase) * data.swayAmount;
+                node.rotation.z = Math.cos(time * data.swaySpeed + data.phase) * data.swayAmount;
+            });
+            
+            // 更新脉冲连线
+            if (state.pulseEnabled) {
+                connections.forEach((line) => {
+                    line.material.uniforms.time.value += 0.016 * state.pulseSpeed * line.userData.baseSpeed;
+                });
+            }
+            
+            // 粒子缓慢旋转
+            particlesMesh.rotation.y += 0.0002;
+            particlesMesh.rotation.x += 0.0001;
+            
+            // 控制器更新
+            controls.update();
+            
+            // 渲染
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // ==================== 键盘快捷键 ====================
+        window.addEventListener('keydown', (event) => {
+            switch(event.key.toLowerCase()) {
+                case 'r':
+                    // 重置视角
+                    camera.position.set(15, 12, 15);
+                    controls.target.set(0, 0, 0);
+                    controls.update();
+                    break;
+                case 'g':
+                    // 切换网格
+                    state.gridEnabled = !state.gridEnabled;
+                    document.getElementById('toggle-grid').classList.toggle('active');
+                    gridHelper.visible = state.gridEnabled;
+                    largeGrid.visible = state.gridEnabled;
+                    break;
+                case 'p':
+                    // 切换脉冲
+                    state.pulseEnabled = !state.pulseEnabled;
+                    document.getElementById('toggle-pulse').textContent = 
+                        state.pulseEnabled ? '⏯️ 停止数据流脉冲' : '▶️ 启动数据流脉冲';
+                    break;
+                case 'escape':
+                    // 取消选中
+                    if (state.selectedNode) {
+                        state.selectedNode.material.emissive.setHex(0x000000);
+                        state.selectedNode.scale.set(1, 1, 1);
+                        state.selectedNode = null;
+                    }
+                    hideTooltip();
+                    document.getElementById('highlight-indicator').classList.remove('visible');
+                    break;
+            }
+        });
+    </script>
 </body>
 </html>
