@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solon-AI 学习手册 - 大模型算力集群</title>
+    <title>Solon-AI 学习手册 - 月球探索</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -245,84 +245,32 @@
             transform: translateX(20px);
         }
         
-        /* Tooltip */
-        .tooltip {
-            position: fixed;
-            padding: 16px;
-            background: rgba(10, 15, 30, 0.9);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(96, 165, 250, 0.3);
-            border-radius: 12px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 100;
-            max-width: 300px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        }
-        
-        .tooltip.visible {
-            opacity: 1;
-        }
-        
-        .tooltip h4 {
-            font-size: 14px;
-            margin-bottom: 12px;
-            color: #60a5fa;
-        }
-        
-        .tooltip-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            margin-bottom: 6px;
-        }
-        
-        .tooltip-label {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .tooltip-value {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
-        }
-        
-        .tooltip-bar {
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            margin-top: 4px;
-            overflow: hidden;
-        }
-        
-        .tooltip-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-            border-radius: 2px;
-            transition: width 0.3s;
-        }
-        
-        /* 选中高亮效果 */
-        .highlight-indicator {
+        /* 信息面板 */
+        .info-panel {
             position: fixed;
             bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 12px 24px;
+            left: 20px;
+            width: 280px;
             background: rgba(10, 15, 30, 0.75);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(96, 165, 250, 0.3);
-            border-radius: 12px;
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
             z-index: 10;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
         }
         
-        .highlight-indicator.visible {
-            opacity: 1;
+        .info-panel h4 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
         }
         
         /* 滚动条样式 */
@@ -351,8 +299,8 @@
     <!-- 侧边栏导航 -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h1>🛡️ Solon-AI</h1>
-            <p>学习手册 - 算力集群可视化</p>
+            <h1>🌙 Solon-AI</h1>
+            <p>学习手册 - 月球探索</p>
         </div>
         
         <nav class="sidebar-nav">
@@ -413,15 +361,15 @@
     
     <!-- 控制面板 -->
     <div class="control-panel">
-        <h3>⚡ 算力集群控制台</h3>
+        <h3>🌙 月球探索控制台</h3>
         
         <div class="control-group">
-            <button class="btn" id="toggle-pulse">⏯️ 启停数据流脉冲</button>
-            <button class="btn secondary" id="reset-camera">📷 重置相机视角</button>
+            <button class="btn" id="toggle-rotation">⏯️ 启停自转</button>
+            <button class="btn secondary" id="reset-camera">📷 重置视角</button>
         </div>
         
         <div class="control-group">
-            <label>数据流速度</label>
+            <label>时间流速</label>
             <div class="slider-container">
                 <input type="range" id="speed-slider" min="0.1" max="3" step="0.1" value="1">
                 <span class="slider-value" id="speed-value">1.0x</span>
@@ -430,53 +378,49 @@
         
         <div class="control-group">
             <div class="toggle-row">
-                <span class="toggle-label">网格背景</span>
-                <div class="toggle active" id="toggle-grid"></div>
+                <span class="toggle-label">显示星空</span>
+                <div class="toggle active" id="toggle-stars"></div>
             </div>
         </div>
         
         <div class="control-group">
             <div class="toggle-row">
-                <span class="toggle-label">节点自动旋转</span>
+                <span class="toggle-label">显示地球</span>
+                <div class="toggle active" id="toggle-earth"></div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <div class="toggle-row">
+                <span class="toggle-label">自动旋转</span>
                 <div class="toggle active" id="toggle-rotate"></div>
             </div>
         </div>
     </div>
     
-    <!-- Tooltip -->
-    <div class="tooltip" id="tooltip">
-        <h4 id="tooltip-title">服务器节点</h4>
-        <div class="tooltip-row">
-            <span class="tooltip-label">节点 ID</span>
-            <span class="tooltip-value" id="tooltip-id">-</span>
+    <!-- 信息面板 -->
+    <div class="info-panel">
+        <h4>🌍 月球环境信息</h4>
+        <div class="info-row">
+            <span>距离地球</span>
+            <span>384,400 km</span>
         </div>
-        <div class="tooltip-row">
-            <span class="tooltip-label">算力状态</span>
-            <span class="tooltip-value" id="tooltip-status">-</span>
+        <div class="info-row">
+            <span>表面温度</span>
+            <span>-20°C ~ -170°C</span>
         </div>
-        <div class="tooltip-row">
-            <span class="tooltip-label">GPU 利用率</span>
-            <span class="tooltip-value" id="tooltip-gpu">-</span>
+        <div class="info-row">
+            <span>重力加速度</span>
+            <span>1.62 m/s²</span>
         </div>
-        <div class="tooltip-bar">
-            <div class="tooltip-bar-fill" id="tooltip-gpu-bar" style="width: 0%"></div>
+        <div class="info-row">
+            <span>自转周期</span>
+            <span>27.3 天</span>
         </div>
-        <div class="tooltip-row">
-            <span class="tooltip-label">显存占用</span>
-            <span class="tooltip-value" id="tooltip-vram">-</span>
+        <div class="info-row">
+            <span>公转周期</span>
+            <span>27.3 天</span>
         </div>
-        <div class="tooltip-bar">
-            <div class="tooltip-bar-fill" id="tooltip-vram-bar" style="width: 0%"></div>
-        </div>
-        <div class="tooltip-row">
-            <span class="tooltip-label">当前任务</span>
-            <span class="tooltip-value" id="tooltip-task">-</span>
-        </div>
-    </div>
-    
-    <!-- 选中指示器 -->
-    <div class="highlight-indicator" id="highlight-indicator">
-        已选中节点: <span id="selected-node-name">-</span>
     </div>
 
     <!-- Three.js -->
@@ -486,13 +430,11 @@
     <script>
         // ==================== 全局状态 ====================
         const state = {
-            pulseEnabled: true,
-            pulseSpeed: 1.0,
-            gridEnabled: true,
-            autoRotate: true,
-            selectedNode: null,
-            mouseX: 0,
-            mouseY: 0
+            rotationEnabled: true,
+            timeSpeed: 1.0,
+            starsEnabled: true,
+            earthEnabled: true,
+            autoRotate: true
         };
         
         // ==================== Three.js 初始化 ====================
@@ -506,7 +448,7 @@
             0.1,
             1000
         );
-        camera.position.set(15, 12, 15);
+        camera.position.set(8, 4, 8);
         
         // 渲染器（开启抗锯齿）
         const renderer = new THREE.WebGLRenderer({
@@ -515,314 +457,284 @@
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.setClearColor(0x0a0f1e, 1);
+        renderer.setClearColor(0x000000, 1);
         container.appendChild(renderer.domElement);
         
         // 轨道控制器
         const controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
-        controls.minDistance = 8;
-        controls.maxDistance = 40;
+        controls.minDistance = 5;
+        controls.maxDistance = 30;
         controls.maxPolarAngle = Math.PI / 2.1;
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
+        controls.autoRotateSpeed = 0.3;
         
-        // ==================== 灯光 ====================
-        // 环境光
-        const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+        // ==================== 灯光（模拟太阳光） ====================
+        // 环境光（极弱，模拟宇宙背景）
+        const ambientLight = new THREE.AmbientLight(0x111122, 0.1);
         scene.add(ambientLight);
         
-        // 主方向光
-        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
-        mainLight.position.set(10, 20, 10);
-        mainLight.castShadow = true;
-        scene.add(mainLight);
+        // 主方向光（太阳光）
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        sunLight.position.set(50, 20, 30);
+        scene.add(sunLight);
         
-        // 补光
-        const fillLight = new THREE.DirectionalLight(0x3b82f6, 0.4);
-        fillLight.position.set(-10, 10, -10);
-        scene.add(fillLight);
+        // 补光（地球反射光，非常弱）
+        const earthLight = new THREE.DirectionalLight(0x4444aa, 0.05);
+        earthLight.position.set(-20, 10, -20);
+        scene.add(earthLight);
         
-        // 底部反弹光
-        const bounceLight = new THREE.DirectionalLight(0x8b5cf6, 0.3);
-        bounceLight.position.set(0, -5, 0);
-        scene.add(bounceLight);
+        // ==================== 星空背景 ====================
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsCount = 3000;
+        const posArray = new Float32Array(starsCount * 3);
+        const sizeArray = new Float32Array(starsCount);
         
-        // ==================== 网格背景 ====================
-        const gridHelper = new THREE.GridHelper(50, 50, 0x1e3a5f, 0x0f172a);
-        gridHelper.position.y = -6;
-        scene.add(gridHelper);
-        
-        // 添加一个更大的淡出网格
-        const largeGrid = new THREE.GridHelper(100, 100, 0x1e3a5f, 0x0f172a);
-        largeGrid.position.y = -6;
-        largeGrid.material.opacity = 0.3;
-        largeGrid.material.transparent = true;
-        scene.add(largeGrid);
-        
-        // ==================== 服务器节点 ====================
-        const nodes = [];
-        const nodeGroup = new THREE.Group();
-        scene.add(nodeGroup);
-        
-        // 节点配置
-        const nodeConfigs = [
-            { id: 'GPU-01', name: '算力节点 A1', x: 0, y: 0, z: 0, gpu: 92, vram: 78, task: '模型训练', status: '运行中' },
-            { id: 'GPU-02', name: '算力节点 A2', x: 5, y: 1, z: 3, gpu: 85, vram: 72, task: '推理服务', status: '运行中' },
-            { id: 'GPU-03', name: '算力节点 B1', x: -5, y: -0.5, z: 2, gpu: 67, vram: 58, task: '数据预处理', status: '运行中' },
-            { id: 'GPU-04', name: '算力节点 B2', x: 3, y: 1.5, z: -4, gpu: 45, vram: 38, task: '空闲', status: '待机' },
-            { id: 'GPU-05', name: '算力节点 C1', x: -3, y: 0.5, z: -5, gpu: 88, vram: 81, task: '模型训练', status: '运行中' },
-            { id: 'GPU-06', name: '算力节点 C2', x: 6, y: -1, z: -2, gpu: 73, vram: 65, task: '微调任务', status: '运行中' },
-            { id: 'GPU-07', name: '算力节点 D1', x: -6, y: 1, z: -3, gpu: 56, vram: 49, task: '推理服务', status: '运行中' },
-            { id: 'GPU-08', name: '算力节点 D2', x: 2, y: 2, z: 5, gpu: 34, vram: 28, task: '空闲', status: '待机' },
-            { id: 'GPU-09', name: '算力节点 E1', x: -4, y: -1.5, z: -6, gpu: 91, vram: 84, task: '模型训练', status: '运行中' },
-            { id: 'GPU-10', name: '算力节点 E2', x: 7, y: 0, z: 1, gpu: 62, vram: 55, task: '数据预处理', status: '运行中' },
-            { id: 'GPU-11', name: '算力节点 F1', x: -7, y: 0.5, z: 0, gpu: 78, vram: 70, task: '推理服务', status: '运行中' },
-            { id: 'GPU-12', name: '算力节点 F2', x: 4, y: -2, z: -6, gpu: 41, vram: 35, task: '空闲', status: '待机' }
-        ];
-        
-        // 创建金属材质
-        const metalMaterial = new THREE.MeshStandardMaterial({
-            color: 0x4a5568,
-            metalness: 0.8,
-            roughness: 0.2,
-        });
-        
-        // 创建服务器节点
-        nodeConfigs.forEach((config, index) => {
-            // 主节点（服务器机箱）
-            const geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
-            const node = new THREE.Mesh(geometry, metalMaterial.clone());
-            node.position.set(config.x, config.y, config.z);
-            node.userData = {
-                ...config,
-                index: index,
-                baseY: config.y,
-                phase: Math.random() * Math.PI * 2,
-                floatSpeed: 0.3 + Math.random() * 0.3,
-                swayAmount: 0.1 + Math.random() * 0.1,
-                swaySpeed: 0.2 + Math.random() * 0.2
-            };
+        for (let i = 0; i < starsCount; i++) {
+            // 随机分布在球壳上
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const radius = 100 + Math.random() * 50;
             
-            // 添加发光边缘
-            const edges = new THREE.EdgesGeometry(geometry);
-            const lineMaterial = new THREE.LineBasicMaterial({
-                color: 0x3b82f6,
-                transparent: true,
-                opacity: 0.6
-            });
-            const wireframe = new THREE.LineSegments(edges, lineMaterial);
-            node.add(wireframe);
+            posArray[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+            posArray[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+            posArray[i * 3 + 2] = radius * Math.cos(phi);
             
-            // 添加顶部指示灯
-            const indicatorGeometry = new THREE.SphereGeometry(0.08, 16, 16);
-            const indicatorMaterial = new THREE.MeshBasicMaterial({
-                color: config.status === '运行中' ? 0x10b981 : 0xf59e0b
-            });
-            const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
-            indicator.position.y = 0.65;
-            node.add(indicator);
-            
-            nodeGroup.add(node);
-            nodes.push(node);
-        });
-        
-        // ==================== 连接线（脉冲效果） ====================
-        const connections = [];
-        const connectionGroup = new THREE.Group();
-        scene.add(connectionGroup);
-        
-        // 连接关系（基于距离）
-        function getConnections() {
-            const conns = [];
-            for (let i = 0; i < nodes.length; i++) {
-                for (let j = i + 1; j < nodes.length; j++) {
-                    const dist = nodes[i].position.distanceTo(nodes[j].position);
-                    if (dist < 8) {
-                        conns.push([i, j]);
-                    }
-                }
-            }
-            return conns;
+            sizeArray[i] = Math.random() * 2;
         }
         
-        const connectionPairs = getConnections();
+        starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        starsGeometry.setAttribute('size', new THREE.BufferAttribute(sizeArray, 1));
         
-        // 创建脉冲连线
-        connectionPairs.forEach(([i, j]) => {
-            const start = nodes[i].position.clone();
-            const end = nodes[j].position.clone();
-            
-            // 创建曲线
-            const mid = start.clone().add(end).multiplyScalar(0.5);
-            mid.y += 0.5; // 微微上拱
-            
-            const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
-            const points = curve.getPoints(50);
-            const geometry = new THREE.BufferGeometry().setFromPoints(points);
-            
-            // 脉冲材质
-            const material = new THREE.ShaderMaterial({
-                uniforms: {
-                    time: { value: 0 },
-                    color: { value: new THREE.Color(0x3b82f6) },
-                    speed: { value: 1.0 }
-                },
-                vertexShader: `
-                    varying vec2 vUv;
-                    void main() {
-                        vUv = uv;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                `,
-                fragmentShader: `
-                    uniform float time;
-                    uniform vec3 color;
-                    uniform float speed;
-                    varying vec2 vUv;
-                    
-                    void main() {
-                        float pulse = fract(vUv.x * 3.0 - time * speed);
-                        float alpha = smoothstep(0.0, 0.2, pulse) * smoothstep(0.6, 0.4, pulse);
-                        alpha *= 0.6;
-                        gl_FragColor = vec4(color, alpha);
-                    }
-                `,
-                transparent: true,
-                blending: THREE.AdditiveBlending
-            });
-            
-            const line = new THREE.Line(geometry, material);
-            line.userData = {
-                curve: curve,
-                baseSpeed: 0.5 + Math.random() * 0.5,
-                phase: Math.random() * Math.PI * 2
-            };
-            
-            connectionGroup.add(line);
-            connections.push(line);
-        });
-        
-        // ==================== 粒子系统（数据流） ====================
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 500;
-        const posArray = new Float32Array(particlesCount * 3);
-        
-        for (let i = 0; i < particlesCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 40;
-        }
-        
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-        
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.05,
-            color: 0x60a5fa,
+        const starsMaterial = new THREE.PointsMaterial({
+            size: 0.5,
+            color: 0xffffff,
             transparent: true,
-            opacity: 0.6,
+            opacity: 0.8,
             blending: THREE.AdditiveBlending
         });
         
-        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particlesMesh);
+        const stars = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(stars);
         
-        // ==================== 交互 ====================
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        let hoveredNode = null;
+        // ==================== 月球表面 ====================
+        // 创建月球地面（大平面）
+        const moonGeometry = new THREE.PlaneGeometry(60, 60, 128, 128);
         
-        // 鼠标移动
-        container.addEventListener('mousemove', (event) => {
-            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-            state.mouseX = event.clientX;
-            state.mouseY = event.clientY;
+        // 添加陨石坑地形位移
+        const positionAttribute = moonGeometry.attributes.position;
+        for (let i = 0; i < positionAttribute.count; i++) {
+            const x = positionAttribute.getX(i);
+            const y = positionAttribute.getY(i);
+            
+            // 基础噪点（月壤起伏）
+            let z = (Math.sin(x * 0.5) * Math.cos(y * 0.5) * 0.1) +
+                    (Math.sin(x * 1.3 + 1.2) * Math.sin(y * 0.9) * 0.05);
+            
+            // 添加随机陨石坑
+            const craterCount = 15;
+            for (let j = 0; j < craterCount; j++) {
+                const craterX = Math.sin(j * 2.5) * 15;
+                const craterY = Math.cos(j * 3.1) * 15;
+                const dist = Math.sqrt((x - craterX) ** 2 + (y - craterY) ** 2);
+                const craterRadius = 2 + Math.random() * 3;
+                
+                if (dist < craterRadius) {
+                    // 陨石坑形状（凹陷）
+                    const craterDepth = (1 - dist / craterRadius) * 0.5;
+                    z -= craterDepth;
+                    
+                    // 陨石坑边缘隆起
+                    if (dist > craterRadius * 0.8) {
+                        z += (dist - craterRadius * 0.8) * 0.5;
+                    }
+                }
+            }
+            
+            positionAttribute.setZ(i, z);
+        }
+        
+        moonGeometry.computeVertexNormals();
+        
+        // 月壤材质（灰色，粗糙）
+        const moonMaterial = new THREE.MeshStandardMaterial({
+            color: 0x888888,
+            roughness: 0.9,
+            metalness: 0.1,
+            flatShading: true
         });
         
-        // 鼠标点击
-        container.addEventListener('click', (event) => {
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(nodes);
+        const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+        moon.rotation.x = -Math.PI / 2;
+        scene.add(moon);
+        
+        // ==================== 独立陨石坑装饰 ====================
+        const craterGroup = new THREE.Group();
+        for (let i = 0; i < 20; i++) {
+            const radius = 0.3 + Math.random() * 0.8;
+            const craterGeo = new THREE.CylinderGeometry(radius, radius * 1.2, 0.1, 32);
+            const craterMat = new THREE.MeshStandardMaterial({
+                color: 0x666666,
+                roughness: 0.95,
+                metalness: 0.05
+            });
+            const crater = new THREE.Mesh(craterGeo, craterMat);
             
-            if (intersects.length > 0) {
-                const node = intersects[0].object;
-                selectNode(node);
-            }
+            crater.position.x = (Math.random() - 0.5) * 20;
+            crater.position.z = (Math.random() - 0.5) * 20;
+            crater.position.y = 0.05;
+            crater.rotation.x = Math.PI / 2;
+            
+            craterGroup.add(crater);
+        }
+        scene.add(craterGroup);
+        
+        // ==================== 地球 ====================
+        const earthGeometry = new THREE.SphereGeometry(2, 64, 64);
+        
+        // 创建地球纹理（Canvas）
+        const earthCanvas = document.createElement('canvas');
+        earthCanvas.width = 512;
+        earthCanvas.height = 256;
+        const ctx = earthCanvas.getContext('2d');
+        
+        // 海洋背景
+        ctx.fillStyle = '#1a4d8f';
+        ctx.fillRect(0, 0, 512, 256);
+        
+        // 大陆块（简化）
+        ctx.fillStyle = '#2d8a4e';
+        
+        // 北美
+        ctx.beginPath();
+        ctx.ellipse(120, 80, 50, 40, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 南美
+        ctx.beginPath();
+        ctx.ellipse(150, 160, 25, 50, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 欧洲/非洲
+        ctx.beginPath();
+        ctx.ellipse(260, 100, 30, 60, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 亚洲
+        ctx.beginPath();
+        ctx.ellipse(350, 70, 60, 45, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 澳大利亚
+        ctx.beginPath();
+        ctx.ellipse(400, 170, 20, 15, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 极地冰盖
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 512, 20);
+        ctx.fillRect(0, 236, 512, 20);
+        
+        const earthTexture = new THREE.CanvasTexture(earthCanvas);
+        
+        const earthMaterial = new THREE.MeshStandardMaterial({
+            map: earthTexture,
+            roughness: 0.7,
+            metalness: 0.1
         });
         
-        // 选中节点
-        function selectNode(node) {
-            // 重置之前选中的节点
-            if (state.selectedNode) {
-                state.selectedNode.material.emissive.setHex(0x000000);
-                state.selectedNode.scale.set(1, 1, 1);
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        earth.position.set(-30, 25, -50);
+        scene.add(earth);
+        
+        // 地球光晕
+        const glowGeometry = new THREE.SphereGeometry(2.2, 32, 32);
+        const glowMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                time: { value: 0 }
+            },
+            vertexShader: `
+                varying vec3 vNormal;
+                void main() {
+                    vNormal = normalize(normalMatrix * normal);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vNormal;
+                void main() {
+                    float intensity = pow(0.6 - dot(vNormal, vec3(0, 0, 1.0)), 2.0);
+                    gl_FragColor = vec4(0.3, 0.6, 1.0, intensity * 0.5);
+                }
+            `,
+            transparent: true,
+            blending: THREE.AdditiveBlending
+        });
+        
+        const earthGlow = new THREE.Mesh(glowGeometry, glowMaterial);
+        earth.add(earthGlow);
+        
+        // ==================== 动画循环 ====================
+        const clock = new THREE.Clock();
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const time = clock.getElapsedTime();
+            const delta = clock.getDelta();
+            
+            // 月球自转
+            if (state.rotationEnabled) {
+                moon.rotation.z += 0.0005 * state.timeSpeed;
+                craterGroup.rotation.z += 0.0005 * state.timeSpeed;
             }
             
-            state.selectedNode = node;
-            node.material.emissive.setHex(0x3b82f6);
-            node.scale.set(1.2, 1.2, 1.2);
+            // 地球自转
+            earth.rotation.y += 0.001 * state.timeSpeed;
             
-            // 显示 tooltip
-            showTooltip(node.userData, state.mouseX, state.mouseY);
+            // 星空缓慢旋转
+            if (state.starsEnabled) {
+                stars.rotation.y += 0.0001 * state.timeSpeed;
+            }
             
-            // 显示选中指示器
-            const indicator = document.getElementById('highlight-indicator');
-            document.getElementById('selected-node-name').textContent = node.userData.name;
-            indicator.classList.add('visible');
+            // 控制器更新
+            controls.update();
             
-            // 3秒后隐藏指示器
-            setTimeout(() => {
-                indicator.classList.remove('visible');
-            }, 3000);
+            // 渲染
+            renderer.render(scene, camera);
         }
         
-        // Tooltip
-        const tooltip = document.getElementById('tooltip');
-        
-        function showTooltip(data, x, y) {
-            document.getElementById('tooltip-title').textContent = data.name;
-            document.getElementById('tooltip-id').textContent = data.id;
-            document.getElementById('tooltip-status').textContent = data.status;
-            document.getElementById('tooltip-gpu').textContent = data.gpu + '%';
-            document.getElementById('tooltip-gpu-bar').style.width = data.gpu + '%';
-            document.getElementById('tooltip-vram').textContent = data.vram + '%';
-            document.getElementById('tooltip-vram-bar').style.width = data.vram + '%';
-            document.getElementById('tooltip-task').textContent = data.task;
-            
-            tooltip.style.left = (x + 20) + 'px';
-            tooltip.style.top = (y + 20) + 'px';
-            tooltip.classList.add('visible');
-        }
-        
-        function hideTooltip() {
-            tooltip.classList.remove('visible');
-        }
-        
-        // 鼠标离开画布时隐藏tooltip
-        container.addEventListener('mouseleave', hideTooltip);
+        animate();
         
         // ==================== UI 控制 ====================
-        // 启停脉冲
-        document.getElementById('toggle-pulse').addEventListener('click', () => {
-            state.pulseEnabled = !state.pulseEnabled;
-            document.getElementById('toggle-pulse').textContent = 
-                state.pulseEnabled ? '⏯️ 停止数据流脉冲' : '▶️ 启动数据流脉冲';
+        // 启停自转
+        document.getElementById('toggle-rotation').addEventListener('click', () => {
+            state.rotationEnabled = !state.rotationEnabled;
+            document.getElementById('toggle-rotation').textContent = 
+                state.rotationEnabled ? '⏯️ 停止自转' : '▶️ 启动自转';
         });
         
         // 速度调节
         const speedSlider = document.getElementById('speed-slider');
         const speedValue = document.getElementById('speed-value');
         speedSlider.addEventListener('input', (e) => {
-            state.pulseSpeed = parseFloat(e.target.value);
-            speedValue.textContent = state.pulseSpeed.toFixed(1) + 'x';
+            state.timeSpeed = parseFloat(e.target.value);
+            speedValue.textContent = state.timeSpeed.toFixed(1) + 'x';
         });
         
-        // 网格开关
-        document.getElementById('toggle-grid').addEventListener('click', (e) => {
-            state.gridEnabled = !state.gridEnabled;
+        // 星空开关
+        document.getElementById('toggle-stars').addEventListener('click', (e) => {
+            state.starsEnabled = !state.starsEnabled;
             e.target.classList.toggle('active');
-            gridHelper.visible = state.gridEnabled;
-            largeGrid.visible = state.gridEnabled;
+            stars.visible = state.starsEnabled;
+        });
+        
+        // 地球开关
+        document.getElementById('toggle-earth').addEventListener('click', (e) => {
+            state.earthEnabled = !state.earthEnabled;
+            e.target.classList.toggle('active');
+            earth.visible = state.earthEnabled;
         });
         
         // 自动旋转开关
@@ -834,7 +746,7 @@
         
         // 重置相机
         document.getElementById('reset-camera').addEventListener('click', () => {
-            camera.position.set(15, 12, 15);
+            camera.position.set(8, 4, 8);
             controls.target.set(0, 0, 0);
             controls.update();
         });
@@ -846,74 +758,23 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
         
-        // ==================== 动画循环 ====================
-        const clock = new THREE.Clock();
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            const time = clock.getElapsedTime();
-            const delta = clock.getDelta();
-            
-            // 更新节点动画（漂浮 + 摆动）
-            nodes.forEach((node, i) => {
-                const data = node.userData;
-                node.position.y = data.baseY + Math.sin(time * data.floatSpeed + data.phase) * 0.3;
-                node.rotation.x = Math.sin(time * data.swaySpeed + data.phase) * data.swayAmount;
-                node.rotation.z = Math.cos(time * data.swaySpeed + data.phase) * data.swayAmount;
-            });
-            
-            // 更新脉冲连线
-            if (state.pulseEnabled) {
-                connections.forEach((line) => {
-                    line.material.uniforms.time.value += 0.016 * state.pulseSpeed * line.userData.baseSpeed;
-                });
-            }
-            
-            // 粒子缓慢旋转
-            particlesMesh.rotation.y += 0.0002;
-            particlesMesh.rotation.x += 0.0001;
-            
-            // 控制器更新
-            controls.update();
-            
-            // 渲染
-            renderer.render(scene, camera);
-        }
-        
-        animate();
-        
         // ==================== 键盘快捷键 ====================
         window.addEventListener('keydown', (event) => {
             switch(event.key.toLowerCase()) {
                 case 'r':
-                    // 重置视角
-                    camera.position.set(15, 12, 15);
+                    camera.position.set(8, 4, 8);
                     controls.target.set(0, 0, 0);
                     controls.update();
                     break;
-                case 'g':
-                    // 切换网格
-                    state.gridEnabled = !state.gridEnabled;
-                    document.getElementById('toggle-grid').classList.toggle('active');
-                    gridHelper.visible = state.gridEnabled;
-                    largeGrid.visible = state.gridEnabled;
+                case 's':
+                    state.starsEnabled = !state.starsEnabled;
+                    document.getElementById('toggle-stars').classList.toggle('active');
+                    stars.visible = state.starsEnabled;
                     break;
-                case 'p':
-                    // 切换脉冲
-                    state.pulseEnabled = !state.pulseEnabled;
-                    document.getElementById('toggle-pulse').textContent = 
-                        state.pulseEnabled ? '⏯️ 停止数据流脉冲' : '▶️ 启动数据流脉冲';
-                    break;
-                case 'escape':
-                    // 取消选中
-                    if (state.selectedNode) {
-                        state.selectedNode.material.emissive.setHex(0x000000);
-                        state.selectedNode.scale.set(1, 1, 1);
-                        state.selectedNode = null;
-                    }
-                    hideTooltip();
-                    document.getElementById('highlight-indicator').classList.remove('visible');
+                case 'e':
+                    state.earthEnabled = !state.earthEnabled;
+                    document.getElementById('toggle-earth').classList.toggle('active');
+                    earth.visible = state.earthEnabled;
                     break;
             }
         });
